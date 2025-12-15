@@ -1,3 +1,80 @@
+# Ollama Local Service Demo
+
+A demonstration project for Ollama local service written in Go.
+
+## Project Introduction
+
+This project is a simple Go application that demonstrates how to interact with the Ollama local AI model service. Ollama is a tool for running large language models locally, and this project shows how to call these models through Go programs.
+
+## Features
+
+- Connect to local Ollama service
+- Simple command-line interface
+- Configurable model parameters
+- Error handling and logging
+
+## Prerequisites
+
+Before running this project, please ensure:
+
+1. **Install Go**: Version 1.21 or higher
+   ```bash
+   # Check Go version
+   go version
+   ```
+
+2. **Install and run Ollama**:
+   - Visit the [Ollama official website](https://ollama.ai/) to download and install
+   - Start the Ollama service
+   - Download at least one model, for example:
+     ```bash
+     ollama pull llama2
+     ollama pull mistral
+     ```
+
+## Important Notes
+
+1. **Ensure the Ollama service is running**:
+   ```bash
+   # Check Ollama service status
+   curl http://localhost:11434/api/tags
+   ```
+
+2. **Model availability**: Ensure the required models are downloaded and available
+
+3. **Performance considerations**: Response times may vary depending on model size and hardware configuration
+
+## Common Issues
+
+1. **Connection failure**:
+   - Check if the Ollama service is running: `ollama serve`
+   - Confirm that port 11434 is available
+
+2. **Model not found**:
+   - List installed models: `ollama list`
+   - Download the required model: `ollama pull <model-name>`
+
+3. **Insufficient memory**:
+   - Try using smaller models
+   - Close other memory-intensive applications
+
+## Log Viewing
+
+```
+info.log
+error.log
+```
+
+## Related Links
+
+- [Ollama Official Website](https://ollama.ai/)
+- [Ollama GitHub](https://github.com/ollama/ollama)
+- [Go Official Documentation](https://golang.org/doc/)
+
+---
+
+**Note**: This is a demonstration project suitable for learning and testing purposes.
+
 # Ollama 本地服务 Demo
 
 一个用 Go 语言编写的 Ollama 本地服务演示项目。
