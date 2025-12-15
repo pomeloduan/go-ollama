@@ -1,15 +1,18 @@
-package main
+package ollama
 
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
+
+	"go-ollama/logger"
 )
 
 type OllamaClient struct {
 	domain    string
 	modelName string
-	logger    *ErrorLogger
+	logger    *logger.ErrorLogger
 
 	contextMap map[int]ChatContext
 
@@ -27,7 +30,7 @@ type ChatContext struct {
 	history []ChatMessage
 }
 
-func StartOllamaClient(domain, defaultModel string, logger *ErrorLogger) (*OllamaClient, error) {
+func StartOllamaClient(domain, defaultModel string, logger *logger.ErrorLogger) (*OllamaClient, error) {
 	// 1. 检查 Ollama 服务是否运行
 	_, err := http.Get(domain)
 	if err != nil {
@@ -95,4 +98,14 @@ func (this *OllamaClient) NextChat(message string, chatId int) string {
 	chatContext.history = append(allChat, respMessage)
 
 	return respMessage.Content
+}
+
+// 查找第一个包含子字符串的元素
+func findFirstContaining(arr []string, substr string) (string, bool) {
+	for _, str := range arr {
+		if strings.Contains(strings.ToLower(str), strings.ToLower(substr)) {
+			return str, true
+		}
+	}
+	return "", false
 }
