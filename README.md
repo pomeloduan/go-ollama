@@ -4,8 +4,6 @@ A demonstration project for Ollama local service written in Go.
 
 ## Project Introduction
 
-这是一个简洁且技术准确的翻译版本：
-
 This is a Go sample project that demonstrates how to call a local Ollama AI model with minimal code. It implements three core functions with the leanest possible implementation:
 
 - **Prompt Management**: Optimize instructions for model interaction  
