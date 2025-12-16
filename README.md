@@ -4,7 +4,13 @@ A demonstration project for Ollama local service written in Go.
 
 ## Project Introduction
 
-This project is a simple Go application that demonstrates how to interact with the Ollama local AI model service. Ollama is a tool for running large language models locally, and this project shows how to call these models through Go programs.
+这是一个简洁且技术准确的翻译版本：
+
+This is a Go sample project that demonstrates how to call a local Ollama AI model with minimal code. It implements three core functions with the leanest possible implementation:
+
+- **Prompt Management**: Optimize instructions for model interaction  
+- **Context Handling**: Maintain coherence across multi-turn conversations  
+- **RAG Integration**: Enhance response quality through retrieval-augmented generation
 
 ## Features
 
@@ -17,7 +23,7 @@ This project is a simple Go application that demonstrates how to interact with t
 
 Before running this project, please ensure:
 
-1. **Install Go**: Version 1.21 or higher
+1. **Install Go**: Version 1.23 or higher
    ```bash
    # Check Go version
    go version
@@ -81,7 +87,11 @@ error.log
 
 ## 项目简介
 
-本项目是一个简单的 Go 应用程序，演示了如何与 Ollama 本地 AI 模型服务进行交互。Ollama 是一个用于在本地运行大型语言模型的工具，本项目展示了如何通过 Go 程序调用这些模型。
+这是一个 Go 语言示例项目，展示了如何用最少代码调用本地 Ollama AI 模型。项目使用尽量少的代码实现三个基本功能：
+
+- **提示词管理**：优化与模型的对话指令
+- **上下文维护**：保持多轮对话连贯性
+- **RAG 集成**：通过检索增强生成提升回答质量
 
 ## 功能特性
 
@@ -94,7 +104,7 @@ error.log
 
 在运行此项目之前，请确保：
 
-1. **安装 Go**: 版本 1.21 或更高
+1. **安装 Go**: 版本 1.23 或更高
    ```bash
    # 检查 Go 版本
    go version
