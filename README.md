@@ -1,7 +1,5 @@
 # Ollama Local Service Demo
 
-## Project Introduction
-
 This is a Go sample project that demonstrates how to call a local Ollama AI model with minimal code.
 
 It implements three core functions:
@@ -65,7 +63,6 @@ Before running this project, please ensure:
 ## Log Viewing
 
 ```
-info.log
 error.log
 ```
 
@@ -80,8 +77,6 @@ error.log
 **Note**: This is a demonstration project suitable for learning and testing purposes.
 
 # Ollama 本地服务 Demo
-
-## 项目简介
 
 这是一个 Go 语言演示项目，展示了如何用最少代码调用本地 Ollama AI 模型。
 
@@ -146,7 +141,6 @@ error.log
 ## 日志查看
 
 ```
-info.log
 error.log
 ```
 
