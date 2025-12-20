@@ -129,7 +129,7 @@ func processInput(chatId int, ollama *ollama.OllamaManager, rule rule.Rule, logg
 					logger.LogError(err, "rag query")
 					continue
 				}
-				ollama.AddSystemMessage(chatId, "请阅读以下文字，并优先根据这段内容回答之后的问题：\n"+strings.Join(sources, "\n"))
+				ollama.AddSystemMessage(chatId, rule.ExternalSourceMessage()+"\n"+strings.Join(sources, "\n"))
 			}
 			var answer = ollama.NextChat(chatId, input)
 			fmt.Println(rule.ParseAnswer(answer))

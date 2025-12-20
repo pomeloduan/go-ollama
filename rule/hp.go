@@ -19,6 +19,10 @@ func (this *HpRule) ExternalSource() string {
 	return `.\source\hp.txt`
 }
 
+func (this *HpRule) ExternalSourceMessage() string {
+	return `请阅读以下文字，并优先根据这段内容回答之后的问题：`
+}
+
 func (this *HpRule) ParseAnswer(text string) string {
 	return text
 }
