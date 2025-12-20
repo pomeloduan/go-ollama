@@ -3,18 +3,19 @@ package ollama
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"go-ollama/logger"
 )
 
-type OllamaClient struct {
+type OllamaManager struct {
 	domain    string
 	modelName string
 	logger    *logger.ErrorLogger
 
-	contextMap map[int]ChatContext
+	contextMap map[int]*ChatContext
 
 	chatId int
 
@@ -30,7 +31,7 @@ type ChatContext struct {
 	history []ChatMessage
 }
 
-func StartOllamaClient(domain, defaultModel string, logger *logger.ErrorLogger) (*OllamaClient, error) {
+func StartOllama(domain, defaultModel string, logger *logger.ErrorLogger) (*OllamaManager, error) {
 	// 1. 检查 Ollama 服务是否运行
 	_, err := http.Get(domain)
 	if err != nil {
@@ -49,33 +50,52 @@ func StartOllamaClient(domain, defaultModel string, logger *logger.ErrorLogger) 
 		modelName = models[0]
 	}
 
-	ollamaClient := OllamaClient{domain: domain, modelName: modelName, logger: logger}
-	ollamaClient.contextMap = make(map[int]ChatContext)
+	ollamaManager := OllamaManager{domain: domain, modelName: modelName, logger: logger}
+	ollamaManager.contextMap = make(map[int]*ChatContext)
 
-	return &ollamaClient, nil
+	return &ollamaManager, nil
 }
 
-func (this *OllamaClient) NewChat(systemMesssage string) int {
+func (this *OllamaManager) GetModelName() string {
+	return this.modelName
+}
+
+// 新的对话
+func (this *OllamaManager) NewChat(systemMesssage string) int {
 	var chatId = this.chatId
 	this.chatId++
 
+	// 初始化历史记录
 	history := make([]ChatMessage, 1)
 	history[0] = ChatMessage{Role: "system", Content: systemMesssage}
 	chatContext := ChatContext{chatId: chatId, history: history}
-	this.contextMap[chatId] = chatContext
+	this.contextMap[chatId] = &chatContext
 	return chatId
 }
 
-func (this *OllamaClient) NextChat(message string, chatId int) string {
-	this.logger.LogInfo("q: " + message)
+// 添加系统信息
+func (this *OllamaManager) AddSystemMessage(chatId int, systemMesssage string) {
+
+	chatContext, ok := this.contextMap[chatId]
+	if !ok {
+		this.logger.LogError(fmt.Errorf("no chat Id found"), "add system")
+		return
+	}
+	chatContext.history = append(chatContext.history, ChatMessage{Role: "system", Content: systemMesssage})
+	this.logger.LogInfo("q" + strconv.Itoa(chatId) + ": " + systemMesssage)
+}
+
+// 对话
+func (this *OllamaManager) NextChat(chatId int, message string) string {
+	this.logger.LogInfo("q" + strconv.Itoa(chatId) + ": " + message)
 	this.TotalQCount++
 
+	// 问题+历史记录
 	chatContext, ok := this.contextMap[chatId]
 	if !ok {
 		this.logger.LogError(fmt.Errorf("no chat Id found"), "sendchat")
 		return ""
 	}
-
 	allChat := append(chatContext.history, ChatMessage{Role: "user", Content: message})
 
 	start := time.Now()
@@ -85,6 +105,7 @@ func (this *OllamaClient) NextChat(message string, chatId int) string {
 		return ""
 	}
 
+	// 统计
 	elapsed := time.Since(start)
 
 	this.TotalACount++
@@ -93,8 +114,9 @@ func (this *OllamaClient) NextChat(message string, chatId int) string {
 
 	respMessage := response.Message
 
-	this.logger.LogInfo("a: " + respMessage.Content)
+	this.logger.LogInfo("a" + strconv.Itoa(chatId) + ": " + respMessage.Content)
 
+	// 保存历史记录
 	chatContext.history = append(allChat, respMessage)
 
 	return respMessage.Content
