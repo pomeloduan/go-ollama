@@ -1,5 +1,12 @@
 # Ollama Local Service Demo
 
+While most AI Agent implementations are primarily in Python, practical examples using Go are relatively scarce. This project is a complete, locally-runnable AI Agent system built with Go. It serves as:
+- A personal learning summary
+- A reference example of AI development for the Go community
+- A place to exchange ideas with others interested in AI Agent development and Go
+
+---
+
 This is a Go sample project that demonstrates how to call a local Ollama AI model with minimal code.
 
 It implements three core functions:
@@ -77,6 +84,13 @@ error.log
 **Note**: This is a demonstration project suitable for learning and testing purposes.
 
 # Ollama 本地服务 Demo
+
+当前AI Agent的实现多以Python为主，Go语言的相关实践较为缺乏。本项目旨在使用Go语言完整实现一套可本地运行的AI Agent系统，希望能够：
+- 作为个人学习总结
+- 为Go社区提供AI开发的参考示例
+- 与其他关注AI agent开发和Go语言的小伙伴交流
+
+---
 
 这是一个 Go 语言演示项目，展示了如何用最少代码调用本地 Ollama AI 模型。
 
