@@ -1,7 +1,7 @@
-While most AI Agent implementations are primarily in Python, practical examples using Go are relatively scarce. This project is a complete, locally-runnable AI Agent system built with Go. It serves as:
-- A personal learning summary
-- A reference example of AI development for the Go community
-- A place to exchange ideas with others interested in AI Agent development and Go
+While most AI Agent implementations are in Python, practical examples using Go are relatively scarce. This project is a complete, locally runnable AI Agent system built with Go. It serves as:
+- A record of my personal learning journey
+- A reference for AI development within the Go community
+- A space to exchange ideas with others interested in building AI Agents and learning Go language
 
 # Ollama Local Service Demo
 
