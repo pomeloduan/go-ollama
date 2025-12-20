@@ -111,11 +111,13 @@ func processInput(chatId int, ollama *ollama.OllamaManager, rule rule.Rule, logg
 		case "h":
 			rule = getHpRule()
 			chatId = newChat(ollama, rule, logger)
+			fmt.Println("等待提问 -->")
 			//q := "下棋的过程中，哈利代替了什么棋子，罗恩代替了什么棋子？"
 			continue
 		case "m":
 			rule = getMathRule()
 			chatId = newChat(ollama, rule, logger)
+			fmt.Println("等待提问 -->")
 			continue
 		case "":
 			continue
@@ -127,10 +129,12 @@ func processInput(chatId int, ollama *ollama.OllamaManager, rule rule.Rule, logg
 					logger.LogError(err, "rag query")
 					continue
 				}
-				ollama.AddSystemMessage(chatId, "请阅读补充材料，并优先根据这段材料回答之后的问题：\n"+strings.Join(sources, "\n"))
+				ollama.AddSystemMessage(chatId, "请阅读以下文字，并优先根据这段内容回答之后的问题：\n"+strings.Join(sources, "\n"))
 			}
 			var answer = ollama.NextChat(chatId, input)
 			fmt.Println(rule.ParseAnswer(answer))
+			fmt.Println("等待提问 -->")
 		}
+
 	}
 }
