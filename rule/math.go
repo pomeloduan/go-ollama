@@ -24,6 +24,10 @@ func (this *MathRule) ExternalSource() string {
 	return ""
 }
 
+func (this *MathRule) ExternalSourceMessage() string {
+	return ""
+}
+
 func (this *MathRule) ParseAnswer(text string) string {
 	var isMath, resolvation, formatedAnswer = parseKeyValueText(text, "isMath", "resolvation")
 	if formatedAnswer && isMath == "true" {

@@ -11,6 +11,7 @@ type Rule interface {
 	SystemMessage() string
 	ParseAnswer(text string) string
 	ExternalSource() string
+	ExternalSourceMessage() string
 }
 
 func UseRule(name string) Rule {
