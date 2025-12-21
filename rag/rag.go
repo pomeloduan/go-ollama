@@ -68,7 +68,7 @@ func (this *RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, 
 
 // 检索
 func (this *RagManager) Query(text string) ([]string, error) {
-	indexArr, err := this.chromem.Query(text, 10)
+	indexArr, err := this.chromem.Query(text, 8)
 	if err != nil {
 		return nil, err
 	}
