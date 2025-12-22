@@ -7,4 +7,6 @@ func DefaultModelName() string {
 	return "deepseek"
 }
 
-func Chat(chat string) string
+func Chat(chat string) string {
+	return ""
+}
