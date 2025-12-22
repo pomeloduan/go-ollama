@@ -7,10 +7,6 @@ func init() {
 type MathRule struct {
 }
 
-func (this *MathRule) DefaultModel() string {
-	return "deepseek"
-}
-
 func (this *MathRule) SystemMessage() string {
 	return `你是一位数学老师。你的任务是解答数学题。
 

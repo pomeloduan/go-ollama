@@ -7,9 +7,6 @@ func TestGetMathRule(t *testing.T) {
 	if rule == nil {
 		t.Fatal("expected get math rule")
 	}
-	if rule.DefaultModel() == "" {
-		t.Fatal("expected get math rule default model")
-	}
 	if rule.SystemMessage() == "" {
 		t.Fatal("expected get math rule system message")
 	}
