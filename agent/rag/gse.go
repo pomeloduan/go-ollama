@@ -18,7 +18,7 @@ func StartGse() *GseManager {
 	return &gseManager
 }
 
-func (this *GseManager) SplitChineseWords(text string) string {
+func (this GseManager) SplitChineseWords(text string) string {
 	cut := this.seg.Cut(text)
 	return strings.Join(cut, " ")
 }

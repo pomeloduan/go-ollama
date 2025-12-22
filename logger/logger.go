@@ -23,7 +23,7 @@ func NewErrorLogger(filename string) (*ErrorLogger, error) {
 }
 
 // LogError 记录错误到文件
-func (this *ErrorLogger) LogError(err error, context ...string) error {
+func (this ErrorLogger) LogError(err error, context ...string) error {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 
 	// 构建日志条目
@@ -48,7 +48,7 @@ func (this *ErrorLogger) LogError(err error, context ...string) error {
 	return this.file.Sync()
 }
 
-func (this *ErrorLogger) LogInfo(info string) error {
+func (this ErrorLogger) LogInfo(info string) error {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 
 	// 构建日志条目
@@ -66,7 +66,7 @@ func (this *ErrorLogger) LogInfo(info string) error {
 }
 
 // Close 关闭日志文件
-func (this *ErrorLogger) Close() error {
+func (this ErrorLogger) Close() error {
 	if this.file != nil {
 		return this.file.Close()
 	}

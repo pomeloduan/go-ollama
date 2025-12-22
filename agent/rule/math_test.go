@@ -3,7 +3,7 @@ package rule
 import "testing"
 
 func TestGetMathRule(t *testing.T) {
-	rule := UseRule("math")
+	rule := GetRule("math")
 	if rule == nil {
 		t.Fatal("expected get math rule")
 	}
@@ -13,7 +13,7 @@ func TestGetMathRule(t *testing.T) {
 }
 
 func TestGoodAnswer(t *testing.T) {
-	rule := UseRule("math")
+	rule := GetRule("math")
 	if rule == nil {
 		t.Fatal("expected get math rule")
 	}
@@ -26,7 +26,7 @@ resolvation: good answer`
 }
 
 func TestBadAnswerNotMath(t *testing.T) {
-	rule := UseRule("math")
+	rule := GetRule("math")
 	if rule == nil {
 		t.Fatal("expected get math rule")
 	}
@@ -59,7 +59,7 @@ resolvation: text`
 }
 
 func TestBadAnswerNoResolvation(t *testing.T) {
-	rule := UseRule("math")
+	rule := GetRule("math")
 	if rule == nil {
 		t.Fatal("expected get math rule")
 	}
@@ -72,7 +72,7 @@ func TestBadAnswerNoResolvation(t *testing.T) {
 }
 
 func TestBadAnswerNotFormated(t *testing.T) {
-	rule := UseRule("math")
+	rule := GetRule("math")
 	if rule == nil {
 		t.Fatal("expected get math rule")
 	}

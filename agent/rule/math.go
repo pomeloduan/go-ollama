@@ -7,7 +7,7 @@ func init() {
 type MathRule struct {
 }
 
-func (this *MathRule) SystemMessage() string {
+func (this MathRule) SystemMessage() string {
 	return `你是一位数学老师。你的任务是解答数学题。
 
 # 行动格式:
@@ -16,15 +16,15 @@ isMath: [这里是判断这是不是数学问题，使用true/false回答]
 resolvation: [这里是你的解答]`
 }
 
-func (this *MathRule) ExternalSource() string {
+func (this MathRule) ExternalSource() string {
 	return ""
 }
 
-func (this *MathRule) ExternalSourceMessage() string {
+func (this MathRule) ExternalSourceMessage() string {
 	return ""
 }
 
-func (this *MathRule) ParseAnswer(text string) string {
+func (this MathRule) ParseAnswer(text string) string {
 	var isMath, resolvation, formatedAnswer = parseKeyValueText(text, "isMath", "resolvation")
 	if formatedAnswer && isMath == "true" {
 		return compactEmptyLines(resolvation)

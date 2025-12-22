@@ -44,7 +44,7 @@ type ProgressInfo struct {
 }
 
 // 预处理
-func (this *RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, error) {
+func (this RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, error) {
 	chucks, err := chucksFromTextFile(filepath)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (this *RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, 
 }
 
 // 检索
-func (this *RagManager) Query(text string, rankable Rankable) (chan string, error) {
+func (this RagManager) Query(text string, rankable Rankable) (chan string, error) {
 	// 召回 向量相似
 	indexArr, err := this.chromem.Query(text, 8)
 	if err != nil {

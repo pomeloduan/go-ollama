@@ -9,14 +9,18 @@ type RankAgent struct {
 	modelName string
 }
 
+func StartRankAgent(ollama *ollama.OllamaManager) *RankAgent {
+	rankAgent := RankAgent{ollama: ollama}
+	rankAgent.modelName = ollama.GetAvailableModelName(rankAgent.DefaultModelName())
+	return &rankAgent
+}
+
 func (this RankAgent) DefaultModelName() string {
 	return "gemma"
 }
 
-func Start(ollama *ollama.OllamaManager) *RankAgent {
-	rankAgent := RankAgent{ollama: ollama}
-	rankAgent.modelName = ollama.GetAvailableModelName(rankAgent.DefaultModelName())
-	return &rankAgent
+func (this RankAgent) Chat(chat string) string {
+	return ""
 }
 
 func (this RankAgent) RankCandidate(candidates string, text string) string {

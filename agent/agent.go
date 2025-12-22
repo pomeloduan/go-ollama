@@ -11,32 +11,40 @@ type Agent interface {
 	Chat(chat string) string
 }
 
-var coordinateAgent Agent
-var agentMap map[string]Agent
-var muLock sync.Mutex
-var once sync.Once
-
-func registerAgent(name string, agent Agent) {
-	muLock.Lock()
-	defer muLock.Unlock()
-
-	if agentMap == nil {
-		agentMap = make(map[string]Agent)
-	}
-	agentMap[name] = agent
+type AgentManager struct {
+	ollama          *ollama.OllamaManager
+	coordinateAgent *CoordinateAgent
+	rankAgent       *RankAgent
+	specialistMap   map[string]Agent
+	muLock          sync.Mutex
 }
 
-func StartAllAgent(ollama *ollama.OllamaManager, logger *logger.ErrorLogger) error {
+func StartAgentManager(ollama *ollama.OllamaManager, logger *logger.ErrorLogger) (*AgentManager, error) {
+	agentManager := AgentManager{
+		ollama:          ollama,
+		coordinateAgent: StartCoordinateAgent(ollama),
+		rankAgent:       StartRankAgent(ollama),
+		specialistMap:   make(map[string]Agent),
+	}
+	return &agentManager, nil
+}
+
+func (this AgentManager) registerSpecialist(name string, specialist Agent) {
+	this.specialistMap[name] = specialist
+}
+
+func (this AgentManager) StartAllSpecialist(ollama *ollama.OllamaManager, logger *logger.ErrorLogger) error {
 	return nil
 }
 
-func GetAgent(name string) Agent {
-	return agentMap[name]
+func (this AgentManager) GetSpecialist(name string) Agent {
+	return this.specialistMap[name]
 }
 
-func GetCoordinateAgent() Agent {
-	once.Do(func() {
-		coordinateAgent = &CoordinateAgent{}
-	})
-	return coordinateAgent
+func (this AgentManager) GetCoordinateAgent() *CoordinateAgent {
+	return this.coordinateAgent
+}
+
+func (this AgentManager) GetRankAgent() *RankAgent {
+	return this.rankAgent
 }
