@@ -7,7 +7,6 @@ import (
 )
 
 type Rule interface {
-	DefaultModel() string
 	SystemMessage() string
 	ParseAnswer(text string) string
 	ExternalSource() string

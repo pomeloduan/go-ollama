@@ -3,6 +3,7 @@ package rag
 import (
 	"go-ollama/logger"
 	"sort"
+	"strings"
 )
 
 type RagManager struct {
@@ -10,6 +11,10 @@ type RagManager struct {
 	gse     *GseManager
 	logger  *logger.ErrorLogger
 	chucks  []string
+}
+
+type Rankable interface {
+	RankCandidate(candidates string, text string) string
 }
 
 func StartRag(logger *logger.ErrorLogger) (*RagManager, error) {
@@ -67,20 +72,27 @@ func (this *RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, 
 }
 
 // 检索
-func (this *RagManager) Query(text string) ([]string, error) {
+func (this *RagManager) Query(text string, rankable Rankable) (chan string, error) {
+	// 召回 向量相似
 	indexArr, err := this.chromem.Query(text, 8)
 	if err != nil {
 		return nil, err
 	}
 	sort.Ints(indexArr)
 
-	var resArr []string
+	var textArr []string
 	for i := 0; i < len(indexArr); i++ {
 		index := indexArr[i]
 		if i > 0 && index-indexArr[i-1] == 2 {
-			resArr = append(resArr, this.chucks[index-1])
+			textArr = append(textArr, this.chucks[index-1])
 		}
-		resArr = append(resArr, this.chucks[index])
+		textArr = append(textArr, this.chucks[index])
 	}
-	return resArr, nil
+	// 重排 rankAgent
+	chRes := make(chan string)
+	go func() {
+		defer close(chRes)
+		chRes <- rankable.RankCandidate(strings.Join(textArr, "\n"), text)
+	}()
+	return chRes, nil
 }

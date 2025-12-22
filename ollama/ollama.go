@@ -11,13 +11,11 @@ import (
 )
 
 type OllamaManager struct {
-	domain    string
-	modelName string
-	logger    *logger.ErrorLogger
+	domain string
+	models []string
+	logger *logger.ErrorLogger
 
-	contextMap map[int]*ChatContext
-
-	chatId int
+	genChatId int
 
 	// 数据统计
 	TotalQCount   int
@@ -26,12 +24,7 @@ type OllamaManager struct {
 	TotalToken    int
 }
 
-type ChatContext struct {
-	chatId  int
-	history []ChatMessage
-}
-
-func StartOllama(domain, defaultModel string, logger *logger.ErrorLogger) (*OllamaManager, error) {
+func StartOllama(domain string, logger *logger.ErrorLogger) (*OllamaManager, error) {
 	// 1. 检查 Ollama 服务是否运行
 	_, err := http.Get(domain)
 	if err != nil {
@@ -44,62 +37,34 @@ func StartOllama(domain, defaultModel string, logger *logger.ErrorLogger) (*Olla
 		return nil, fmt.Errorf("no model")
 	}
 
-	// 3. 使用deepseek，或第一个模型
-	modelName, getModel := findFirstContaining(models, defaultModel)
-	if !getModel {
-		modelName = models[0]
-	}
-
-	ollamaManager := OllamaManager{domain: domain, modelName: modelName, logger: logger}
-	ollamaManager.contextMap = make(map[int]*ChatContext)
+	ollamaManager := OllamaManager{domain: domain, models: models, logger: logger}
 
 	return &ollamaManager, nil
 }
 
-func (this *OllamaManager) GetModelName() string {
-	return this.modelName
-}
-
-// 新的对话
-func (this *OllamaManager) NewChat(systemMesssage string) int {
-	var chatId = this.chatId
-	this.chatId++
-
-	// 初始化历史记录
-	history := make([]ChatMessage, 1)
-	history[0] = ChatMessage{Role: "system", Content: systemMesssage}
-	chatContext := ChatContext{chatId: chatId, history: history}
-	this.contextMap[chatId] = &chatContext
-	return chatId
-}
-
-// 添加系统信息
-func (this *OllamaManager) AddSystemMessage(chatId int, systemMesssage string) {
-
-	chatContext, ok := this.contextMap[chatId]
-	if !ok {
-		this.logger.LogError(fmt.Errorf("no chat Id found"), "add system")
-		return
+func (this OllamaManager) GetAvailableModelName(modelName string) string {
+	for i := 0; i < len(this.models); i++ {
+		if strings.Contains(this.models[i], modelName) {
+			return this.models[i]
+		}
 	}
-	chatContext.history = append(chatContext.history, ChatMessage{Role: "system", Content: systemMesssage})
-	this.logger.LogInfo("q" + strconv.Itoa(chatId) + ": " + systemMesssage)
+	return ""
 }
 
-// 对话
-func (this *OllamaManager) NextChat(chatId int, message string) string {
-	this.logger.LogInfo("q" + strconv.Itoa(chatId) + ": " + message)
+func (this OllamaManager) GetDefaultEmbedModelName() string {
+	return this.GetAvailableModelName("embed")
+}
+
+func (this OllamaManager) GetDefaultLlmModelName() string {
+	return this.GetAvailableModelName("deepseek")
+}
+
+func (this OllamaManager) ChatWithoutContext(modelName string, message string) string {
+	this.logger.LogInfo("q#: " + message)
 	this.TotalQCount++
 
-	// 问题+历史记录
-	chatContext, ok := this.contextMap[chatId]
-	if !ok {
-		this.logger.LogError(fmt.Errorf("no chat Id found"), "sendchat")
-		return ""
-	}
-	allChat := append(chatContext.history, ChatMessage{Role: "user", Content: message})
-
 	start := time.Now()
-	response, err := sendChatRequest(this.domain, this.modelName, allChat)
+	response, err := sendChatRequest(this.domain, modelName, chatMessagesFromChatString(message))
 	if err != nil {
 		this.logger.LogError(fmt.Errorf("send chat err: %v", err), "sendchat")
 		return ""
@@ -114,20 +79,48 @@ func (this *OllamaManager) NextChat(chatId int, message string) string {
 
 	respMessage := response.Message
 
-	this.logger.LogInfo("a" + strconv.Itoa(chatId) + ": " + respMessage.Content)
-
-	// 保存历史记录
-	chatContext.history = append(allChat, respMessage)
+	this.logger.LogInfo("a#: " + respMessage.Content)
 
 	return respMessage.Content
 }
 
-// 查找第一个包含子字符串的元素
-func findFirstContaining(arr []string, substr string) (string, bool) {
-	for _, str := range arr {
-		if strings.Contains(strings.ToLower(str), strings.ToLower(substr)) {
-			return str, true
-		}
+// 新的对话
+func (this OllamaManager) NewChat(modelName string, systemMesssage string) *ChatContext {
+	var chatId = this.genChatId
+	this.genChatId++
+
+	return newChat(modelName, chatId, systemMesssage)
+}
+
+// 对话
+// todo 上下文优化 有限上下文
+func (this OllamaManager) NextChat(chatCtx *ChatContext, message string) string {
+	this.logger.LogInfo("q" + strconv.Itoa(chatCtx.chatId) + ": " + message)
+	this.TotalQCount++
+
+	// 问题+历史记录
+	chatCtx.addChatString(message)
+
+	start := time.Now()
+	response, err := sendChatRequest(this.domain, chatCtx.modelName, chatCtx.getMessages())
+	if err != nil {
+		this.logger.LogError(fmt.Errorf("send chat err: %v", err), "sendchat")
+		return ""
 	}
-	return "", false
+
+	// 统计
+	elapsed := time.Since(start)
+
+	this.TotalACount++
+	this.TotalDuration += elapsed
+	this.TotalToken += response.EvalCount
+
+	respMessage := response.Message
+
+	this.logger.LogInfo("a" + strconv.Itoa(chatCtx.chatId) + ": " + respMessage.Content)
+
+	// 保存历史记录
+	chatCtx.addMessage(respMessage)
+
+	return respMessage.Content
 }
