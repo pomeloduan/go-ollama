@@ -17,6 +17,8 @@ type Specialist struct {
 	chatCtx   *ollama.ChatContext
 	ragCtx    *rag.RagContext
 	logger    *logger.ErrorLogger
+
+	reviewer *Reviewer
 }
 
 func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule rule.Rule, logger *logger.ErrorLogger) *Specialist {
@@ -26,6 +28,9 @@ func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule rul
 		modelName: ollama.GetAvailableModelName("deepseek"),
 		rule:      rule,
 		logger:    logger,
+	}
+	if rule.ReviewerSystemMessage() != "" {
+		specialist.reviewer = startReviewer(ollama, rule, logger)
 	}
 	return &specialist
 }
@@ -71,6 +76,14 @@ func (this *Specialist) chat(chat string) string {
 		}
 		chat = this.rule.MessageFromSource(source, chat)
 	}
-	var answer = this.ollama.NextChat(this.chatCtx, chat)
-	return this.rule.ParseAnswer(answer)
+	answer := this.ollama.NextChat(this.chatCtx, chat)
+	answer = this.rule.ParseAnswer(answer)
+	if this.rule.ReviewerSystemMessage() != "" {
+		review := this.reviewer.review(chat, answer)
+		if review.Score < 86 {
+			answer = this.ollama.NextChat(this.chatCtx, "请参考以下评价重新写作：\n"+review.Review)
+			answer = this.rule.ParseAnswer(answer)
+		}
+	}
+	return answer
 }

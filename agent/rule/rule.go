@@ -10,6 +10,8 @@ type Rule interface {
 	ParseAnswer(text string) string
 	SourceFile() string
 	MessageFromSource(source string, question string) string
+	ReviewerSystemMessage() string
+	ParseReview(text string) ReviewResult
 }
 
 var ruleMap map[string]Rule
@@ -34,12 +36,25 @@ func (this *GeneralRule) MessageFromSource(source string, question string) strin
 	return ""
 }
 
+func (this *GeneralRule) ReviewerSystemMessage() string {
+	return ""
+}
+
+func (this *GeneralRule) ParseReview(text string) ReviewResult {
+	return ReviewResult{}
+}
+
 func (this *GeneralRule) ParseAnswer(text string) string {
 	return text
 }
 
 func GetRule(name string) Rule {
 	return ruleMap[name]
+}
+
+type ReviewResult struct {
+	Score  int
+	Review string
 }
 
 func AllRuleNames() []string {

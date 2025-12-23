@@ -11,7 +11,7 @@ type Coordinator struct {
 func startCoordinator(ollama *ollama.OllamaManager) *Coordinator {
 	coordinator := Coordinator{
 		ollama:        ollama,
-		modelName:     ollama.GetAvailableModelName("gemma"),
+		modelName:     ollama.GetAvailableModelName("deepseek"),
 		specialistMap: make(map[string]string),
 	}
 	return &coordinator

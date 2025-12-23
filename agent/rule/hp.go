@@ -23,6 +23,14 @@ func (this *HpRule) MessageFromSource(source string, question string) string {
 	return "请阅读以下文字，并优先根据这段内容回答之后的问题：\n" + source + "\n问题：" + question
 }
 
+func (this *HpRule) ReviewerSystemMessage() string {
+	return ""
+}
+
+func (this *HpRule) ParseReview(text string) ReviewResult {
+	return ReviewResult{}
+}
+
 func (this *HpRule) ParseAnswer(text string) string {
 	return text
 }
