@@ -37,13 +37,13 @@
 │ - hp        │   └──►│ Scoring   │       ┌─────────────┐
 │ - math      │-------│ Feedback  │------►│ Rag Manager │
 │ - poet      │       └─────┬─────┘       │ ---         │
-│ ...         │             │             │ chucking    │
+│ ...         │             │             │ Chucking    │
 └──────┬──────┘             │             │     ▼       │
-       │                    │             │ embedding + │
+       │                    │             │ Embedding + │
        └──────────┬─────────┘             │     ▼     +-│---►Gse Segmentation
-                  │                       │ retrieval + │    Chromem Vector DB
+                  │                       │ Retrieval + │    Chromem Vector DB
          ┌────────▼────────┐              │     ▼       │    ┌──────────┐
-         │ Ollama Manager  │              │ reranking +-│---►│ Reranker │
+         │ Ollama Manager  │              │ Reranking +-│---►│ Reranker │
          │ ---             │              └─────────────┘    └─────┬────┘
          │ Ollama Service  │◄──────────────────────────────────────┘
          │ Local LLM       │
