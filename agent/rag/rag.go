@@ -6,9 +6,9 @@ import (
 )
 
 type RagManager struct {
-	chromem *ChromemManager
-	gse     *GseManager
-	rerank  Rerankable
+	chromem  *ChromemManager
+	gse      *GseManager
+	reranker Rerankable
 
 	autogenRagId int
 }
@@ -18,12 +18,12 @@ type Rerankable interface {
 }
 
 const retrievalCount = 10
-const rerankCount = 5
+const rerankingCount = 5
 
-func StartRag(rerank Rerankable) *RagManager {
-	chromem := StartChromem()
-	gse := StartGse()
-	ragManager := RagManager{chromem: chromem, gse: gse, rerank: rerank}
+func StartRag(reranker Rerankable) *RagManager {
+	chromem := startChromem()
+	gse := startGse()
+	ragManager := RagManager{chromem: chromem, gse: gse, reranker: reranker}
 	return &ragManager
 }
 
@@ -61,7 +61,7 @@ func (this *RagManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 	go func() {
 		defer close(chProg)
 		for i := 0; i < len(chucks); i++ {
-			words := this.gse.SplitChineseWords(chucks[i])
+			words := this.gse.splitChineseWords(chucks[i])
 			err = this.chromem.addDocuments(ragId, i, words)
 
 			percentage := float32(i+1) / float32(len(chucks)) * 100
@@ -101,7 +101,7 @@ func (this *RagManager) Query(ragCtx *RagContext, text string) (chan string, err
 	chRes := make(chan string)
 	go func() {
 		defer close(chRes)
-		chRes <- this.rerank.RankCandidate(strings.Join(textArr, "\n"), text, rerankCount)
+		chRes <- this.reranker.RankCandidate(strings.Join(textArr, "\n"), text, rerankingCount)
 	}()
 	return chRes, nil
 }

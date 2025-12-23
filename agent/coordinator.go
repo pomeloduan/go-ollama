@@ -2,25 +2,26 @@ package agent
 
 import "go-ollama/ollama"
 
-type CoordinateAgent struct {
+type Coordinator struct {
 	ollama        *ollama.OllamaManager
 	modelName     string
 	specialistMap map[string]string
 }
 
-func StartCoordinateAgent(ollama *ollama.OllamaManager) *CoordinateAgent {
-	coordinate := CoordinateAgent{
+func startCoordinator(ollama *ollama.OllamaManager) *Coordinator {
+	coordinator := Coordinator{
 		ollama:        ollama,
 		modelName:     ollama.GetAvailableModelName("deepseek"),
 		specialistMap: make(map[string]string),
 	}
-	return &coordinate
+	return &coordinator
 }
 
-func (this *CoordinateAgent) AddSpecialist(name string, introduction string) {
+func (this *Coordinator) addSpecialist(name string, introduction string) {
 	this.specialistMap[name] = introduction
 }
-func (this *CoordinateAgent) AskForSpecialist(chat string) string {
+
+func (this *Coordinator) askForSpecialist(chat string) string {
 	message := "现在有一个问题需要寻求专家的帮助，有下面几位专家：\n"
 	for name, introduction := range this.specialistMap {
 		message += "专家名字：" + name + " 专家介绍：" + introduction + "\n"

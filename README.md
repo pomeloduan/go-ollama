@@ -9,11 +9,47 @@ While most AI Agent implementations are in Python, practical examples using Go a
 
 This is a Go sample project that demonstrates how to call a local Ollama AI model with minimal code.
 
-It implements three core functions:
+This project builds an agent system with the following features:
 
-- **Prompt Management**: Optimize instructions for model interaction  
-- **Context Handling**: Maintain coherence across multi-turn conversations  
-- **RAG Integration**: Enhance response quality through retrieval-augmented generation
+- **Prompt Management**: Optimizes dialogue instructions for the model
+- **Context Maintenance**: Maintains coherence across multi-turn conversations
+- **RAG Integration**: Incorporates Retrieval-Augmented Generation technology to enhance the accuracy of professional question answering
+- **Multi-Agent Collaboration**: Employs a centralized architecture where a coordinator allocates tasks and specialist agents handle domain-specific problems
+- **Reviewer Mode**: Adheres to a Generate → Review → Refine workflow to ensure continuous optimization of output quality
+
+```
+. . . . . . . . . . . . . . . . . . .
+.
+. Agent Manager
+.                 │
+.          ┌──────▼──────┐
+.          │ Coordinator │
+.          │ ---         │
+.          │ Analysis    │
+.          │ Matching    │
+.          └──────┬──────┘
+.                 │
+.      ┌──────────┴─────────┐
+       │                    │
+┌──────▼──────┐       ┌─────▼─────┐
+│ Specialist  │       │ Reviewer  │
+│ ---         │◄──┐   │ ---       │
+│ - hp        │   └──►│ Scoring   │       ┌─────────────┐
+│ - math      │-------│ Feedback  │------►│ Rag Manager │
+│ - poet      │       └─────┬─────┘       │ ---         │
+│ ...         │             │             │ chucking    │
+└──────┬──────┘             │             │     ▼       │
+       │                    │             │ embedding + │
+       └──────────┬─────────┘             │     ▼     +-│---►Gse Segmentation
+                  │                       │ retrieval + │    Chromem Vector DB
+         ┌────────▼────────┐              │     ▼       │    ┌──────────┐
+         │ Ollama Manager  │              │ reranking +-│---►│ Reranker │
+         │ ---             │              └─────────────┘    └─────┬────┘
+         │ Ollama Service  │◄──────────────────────────────────────┘
+         │ Local LLM       │
+         └─────────────────┘
+
+```
 
 ## Features
 

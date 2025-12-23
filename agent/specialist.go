@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-type SpecialistAgent struct {
+type Specialist struct {
 	ollama    *ollama.OllamaManager
 	rag       *rag.RagManager
 	modelName string
@@ -17,20 +17,25 @@ type SpecialistAgent struct {
 	chatCtx   *ollama.ChatContext
 	ragCtx    *rag.RagContext
 	logger    *logger.ErrorLogger
+
+	reviewer *Reviewer
 }
 
-func StartSpecialistAgent(ollama *ollama.OllamaManager, rag *rag.RagManager, rule rule.Rule, logger *logger.ErrorLogger) *SpecialistAgent {
-	specialist := SpecialistAgent{
+func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule rule.Rule, logger *logger.ErrorLogger) *Specialist {
+	specialist := Specialist{
 		ollama:    ollama,
 		rag:       rag,
 		modelName: ollama.GetAvailableModelName("deepseek"),
 		rule:      rule,
 		logger:    logger,
 	}
+	if rule.ReviewerSystemMessage() != "" {
+		specialist.reviewer = startReviewer(ollama, rule, logger)
+	}
 	return &specialist
 }
 
-func (this *SpecialistAgent) prepareChat() {
+func (this *Specialist) prepareChat() {
 	if this.rule.SourceFile() != "" {
 		ragCtx, chProg, err := this.rag.PreprocessFromFile(this.rule.SourceFile())
 		if err != nil {
@@ -56,7 +61,7 @@ func (this *SpecialistAgent) prepareChat() {
 	this.chatCtx = this.ollama.NewChat(this.modelName, this.rule.SystemMessage())
 }
 
-func (this *SpecialistAgent) Chat(chat string) string {
+func (this *Specialist) chat(chat string) string {
 	if this.chatCtx == nil {
 		this.prepareChat()
 	}
@@ -71,6 +76,14 @@ func (this *SpecialistAgent) Chat(chat string) string {
 		}
 		chat = this.rule.MessageFromSource(source, chat)
 	}
-	var answer = this.ollama.NextChat(this.chatCtx, chat)
-	return this.rule.ParseAnswer(answer)
+	answer := this.ollama.NextChat(this.chatCtx, chat)
+	answer = this.rule.ParseAnswer(answer)
+	if this.rule.ReviewerSystemMessage() != "" {
+		review := this.reviewer.review(chat, answer)
+		if review.Score < 86 {
+			answer = this.ollama.NextChat(this.chatCtx, "请参考以下评价重新写作：\n"+review.Review)
+			answer = this.rule.ParseAnswer(answer)
+		}
+	}
+	return answer
 }

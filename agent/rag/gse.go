@@ -11,14 +11,14 @@ type GseManager struct {
 	seg gse.Segmenter
 }
 
-func StartGse() *GseManager {
+func startGse() *GseManager {
 	var seg gse.Segmenter
 	seg.LoadDict("zh_s")
 	gseManager := GseManager{seg: seg}
 	return &gseManager
 }
 
-func (this *GseManager) SplitChineseWords(text string) string {
+func (this *GseManager) splitChineseWords(text string) string {
 	cut := this.seg.Cut(text)
 	return strings.Join(cut, " ")
 }
