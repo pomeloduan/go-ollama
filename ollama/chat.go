@@ -17,15 +17,15 @@ func chatMessagesFromChatString(content string) []ChatMessage {
 	return messages
 }
 
-func (this ChatContext) addMessage(messsage ChatMessage) {
+func (this *ChatContext) addMessage(messsage ChatMessage) {
 	this.history = append(this.history, messsage)
 }
 
-func (this ChatContext) addChatString(content string) {
+func (this *ChatContext) addChatString(content string) {
 	this.history = append(this.history, ChatMessage{Role: "user", Content: content})
 }
 
-func (this ChatContext) getMessages() []ChatMessage {
+func (this *ChatContext) getMessages() []ChatMessage {
 	messages := make([]ChatMessage, 1)
 	messages[0] = this.systemMessage
 	messages = append(messages, this.history...)

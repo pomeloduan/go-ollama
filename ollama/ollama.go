@@ -42,7 +42,7 @@ func StartOllama(domain string, logger *logger.ErrorLogger) (*OllamaManager, err
 	return &ollamaManager, nil
 }
 
-func (this OllamaManager) GetAvailableModelName(modelName string) string {
+func (this *OllamaManager) GetAvailableModelName(modelName string) string {
 	for i := 0; i < len(this.models); i++ {
 		if strings.Contains(this.models[i], modelName) {
 			return this.models[i]
@@ -51,15 +51,15 @@ func (this OllamaManager) GetAvailableModelName(modelName string) string {
 	return ""
 }
 
-func (this OllamaManager) GetDefaultEmbedModelName() string {
+func (this *OllamaManager) GetDefaultEmbedModelName() string {
 	return this.GetAvailableModelName("embed")
 }
 
-func (this OllamaManager) GetDefaultLlmModelName() string {
+func (this *OllamaManager) GetDefaultLlmModelName() string {
 	return this.GetAvailableModelName("deepseek")
 }
 
-func (this OllamaManager) ChatWithoutContext(modelName string, message string) string {
+func (this *OllamaManager) ChatWithoutContext(modelName string, message string) string {
 	this.logger.LogInfo("q#: " + message)
 	this.TotalQCount++
 
@@ -85,7 +85,7 @@ func (this OllamaManager) ChatWithoutContext(modelName string, message string) s
 }
 
 // 新的对话
-func (this OllamaManager) NewChat(modelName string, systemMesssage string) *ChatContext {
+func (this *OllamaManager) NewChat(modelName string, systemMesssage string) *ChatContext {
 	var chatId = this.genChatId
 	this.genChatId++
 
@@ -94,7 +94,7 @@ func (this OllamaManager) NewChat(modelName string, systemMesssage string) *Chat
 
 // 对话
 // todo 上下文优化 有限上下文
-func (this OllamaManager) NextChat(chatCtx *ChatContext, message string) string {
+func (this *OllamaManager) NextChat(chatCtx *ChatContext, message string) string {
 	this.logger.LogInfo("q" + strconv.Itoa(chatCtx.chatId) + ": " + message)
 	this.TotalQCount++
 

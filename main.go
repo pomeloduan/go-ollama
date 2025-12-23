@@ -21,7 +21,7 @@ func main() {
 	fmt.Println("--> Ollama Local Service Demo")
 
 	// 创建错误日志
-	logger, err := logger.NewErrorLogger("errors.log")
+	logger, err := logger.NewErrorLogger("info.log")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func main() {
 		logger.LogError(err, "lauching")
 	}
 
-	err = agent.StartAllAgent(ollama, logger)
+	agent, err := agent.StartAgentManager(ollama, logger)
 	if err != nil {
 		logger.LogError(err, "lauching")
 	}
@@ -42,16 +42,12 @@ func main() {
 	// chatId := newChat(ollama, rule, logger)
 
 	// 提问 / 回答
-	processInput(logger)
+	processInput(agent, logger)
 
 	fmt.Println("提问：", ollama.TotalQCount)
 	fmt.Println("回答：", ollama.TotalACount)
 	fmt.Printf("总用时：%f\n", ollama.TotalDuration.Seconds())
 	fmt.Println("token使用：", ollama.TotalToken)
-}
-
-func askCoordinateAgent(chat string) string {
-	return agent.GetAgent("coordinate").SendChat(chat)
 }
 
 // func getHpRule() rule.Rule {
@@ -96,11 +92,17 @@ func askCoordinateAgent(chat string) string {
 // }
 
 // 处理用户输入
-func processInput(logger *logger.ErrorLogger) {
+func processInput(agent *agent.AgentManager, logger *logger.ErrorLogger) {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Println("等待提问 -->")
 	fmt.Println("  q - 退出程序")
+
+	// test
+	// agent.Chat("1+2+3+...+100的值是多少？")
+	// agent.Chat("请你以猫为主题，写一首诗。")
+	// agent.Chat("在《哈利波特》中，为了通过下棋关卡，哈利代替了什么棋子，罗恩代替了什么棋子？")
+	// agent.Chat("今天天气怎么样")
 
 	for {
 		input, err := reader.ReadString('\n')
@@ -139,7 +141,7 @@ func processInput(logger *logger.ErrorLogger) {
 			// }
 			// var answer = ollama.NextChat(chatId, input)
 			// fmt.Println(rule.ParseAnswer(answer))
-			answer := askCoordinateAgent(input)
+			answer := agent.Chat(input)
 			fmt.Println(answer)
 			fmt.Println("等待提问 -->")
 		}

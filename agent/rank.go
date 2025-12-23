@@ -2,6 +2,7 @@ package agent
 
 import (
 	"go-ollama/ollama"
+	"strconv"
 )
 
 type RankAgent struct {
@@ -10,20 +11,14 @@ type RankAgent struct {
 }
 
 func StartRankAgent(ollama *ollama.OllamaManager) *RankAgent {
-	rankAgent := RankAgent{ollama: ollama}
-	rankAgent.modelName = ollama.GetAvailableModelName(rankAgent.DefaultModelName())
-	return &rankAgent
+	rank := RankAgent{ollama: ollama, modelName: ollama.GetAvailableModelName("gemma")}
+	return &rank
 }
 
-func (this RankAgent) DefaultModelName() string {
-	return "gemma"
-}
-
-func (this RankAgent) Chat(chat string) string {
-	return ""
-}
-
-func (this RankAgent) RankCandidate(candidates string, text string) string {
-	chat := "话题：" + text + "请从以下许多段文字中，先每一段都和话题进行比较，给出一个相关性评分，然后选择相关性最高的3段，最后仅回复相关性最高的3段文字原文，不需要回复原因和分数：" + candidates
-	return this.ollama.ChatWithoutContext(this.modelName, chat)
+func (this *RankAgent) RankCandidate(candidates string, text string, num int) string {
+	message := "话题：" + text +
+		"\n请从以下许多段文字中，先每一段都和话题进行比较，给出一个相关性评分，然后选择相关性最高的" + strconv.Itoa(num) +
+		"段，最后仅回复相关性最高的" + strconv.Itoa(num) +
+		"段文字原文，不需要回复原因和分数：\n" + candidates
+	return this.ollama.ChatWithoutContext(this.modelName, message)
 }

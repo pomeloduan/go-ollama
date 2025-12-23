@@ -29,13 +29,13 @@ func StartChromem() (*ChromemManager, error) {
 }
 
 // 向量化+存储
-func (this ChromemManager) AddDocuments(index int, content string) error {
+func (this *ChromemManager) AddDocuments(index int, content string) error {
 	ctx := context.Background()
 	return this.collection.AddDocument(ctx, chromem.Document{ID: strconv.Itoa(index), Content: content})
 }
 
 // 向量检索
-func (this ChromemManager) Query(text string, nResults int) ([]int, error) {
+func (this *ChromemManager) Query(text string, nResults int) ([]int, error) {
 	ctx := context.Background()
 	res, err := this.collection.Query(ctx, text, nResults, nil, nil)
 	if err != nil {

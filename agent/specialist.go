@@ -1,8 +1,74 @@
 package agent
 
-import "go-ollama/ollama"
+import (
+	"fmt"
+	"go-ollama/agent/rag"
+	"go-ollama/agent/rule"
+	"go-ollama/logger"
+	"go-ollama/ollama"
+	"strconv"
+)
 
 type SpecialistAgent struct {
 	ollama    *ollama.OllamaManager
+	rag       *rag.RagManager
 	modelName string
+	rule      rule.Rule
+	chatCtx   *ollama.ChatContext
+	logger    *logger.ErrorLogger
+}
+
+func StartSpecialistAgent(ollama *ollama.OllamaManager, rag *rag.RagManager, rule rule.Rule, logger *logger.ErrorLogger) *SpecialistAgent {
+	specialist := SpecialistAgent{
+		ollama:    ollama,
+		rag:       rag,
+		modelName: ollama.GetAvailableModelName("deepseek"),
+		rule:      rule,
+		logger:    logger,
+	}
+	return &specialist
+}
+
+func (this *SpecialistAgent) prepareChat() {
+	if this.rule.SourceFile() != "" {
+		chProg, err := this.rag.PreprocessFromFile(this.rule.SourceFile())
+		if err != nil {
+			this.logger.LogError(err, "rag preprocess")
+		} else {
+			fmt.Println("需要导入外部知识库，请稍等...")
+			errCount := 0
+			for p := range chProg {
+				if p.Err != nil {
+					this.logger.LogError(p.Err, "rag preprocess", p.Text)
+					errCount++
+				}
+				fmt.Printf("\r进度：%.1f%% 第%d项，共%d项", p.Percentage, p.Current, p.Total)
+			}
+			if errCount > 0 {
+				fmt.Println(" 预处理错误" + strconv.Itoa(errCount) + "项")
+			} else {
+				fmt.Println()
+			}
+		}
+	}
+	this.chatCtx = this.ollama.NewChat(this.modelName, this.rule.SystemMessage())
+}
+
+func (this *SpecialistAgent) Chat(chat string) string {
+	if this.chatCtx == nil {
+		this.prepareChat()
+	}
+	if this.rule.SourceFile() != "" {
+		chSource, err := this.rag.Query(chat)
+		if err != nil {
+			this.logger.LogError(err, "rag query")
+		}
+		source := ""
+		for s := range chSource {
+			source += s
+		}
+		chat = this.rule.MessageFromSource(source, chat)
+	}
+	var answer = this.ollama.NextChat(this.chatCtx, chat)
+	return this.rule.ParseAnswer(answer)
 }

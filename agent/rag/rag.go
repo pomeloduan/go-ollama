@@ -11,20 +11,25 @@ type RagManager struct {
 	gse     *GseManager
 	logger  *logger.ErrorLogger
 	chucks  []string
+	rank    Rankable
 }
 
 type Rankable interface {
-	RankCandidate(candidates string, text string) string
+	RankCandidate(candidates string, text string, num int) string
 }
 
-func StartRag(logger *logger.ErrorLogger) (*RagManager, error) {
+const retrievalCount = 10
+const rerankCount = 5
+
+// todo rag context
+func StartRag(rank Rankable, logger *logger.ErrorLogger) (*RagManager, error) {
 	chromem, err := StartChromem()
 	if err != nil {
 		return nil, err
 	}
 	gse := StartGse()
 
-	ragManager := RagManager{chromem: chromem, gse: gse, logger: logger}
+	ragManager := RagManager{chromem: chromem, gse: gse, rank: rank, logger: logger}
 	return &ragManager, nil
 }
 
@@ -44,7 +49,7 @@ type ProgressInfo struct {
 }
 
 // 预处理
-func (this RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, error) {
+func (this *RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, error) {
 	chucks, err := chucksFromTextFile(filepath)
 	if err != nil {
 		return nil, err
@@ -72,9 +77,9 @@ func (this RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, e
 }
 
 // 检索
-func (this RagManager) Query(text string, rankable Rankable) (chan string, error) {
+func (this *RagManager) Query(text string) (chan string, error) {
 	// 召回 向量相似
-	indexArr, err := this.chromem.Query(text, 8)
+	indexArr, err := this.chromem.Query(text, retrievalCount)
 	if err != nil {
 		return nil, err
 	}
@@ -88,11 +93,11 @@ func (this RagManager) Query(text string, rankable Rankable) (chan string, error
 		}
 		textArr = append(textArr, this.chucks[index])
 	}
-	// 重排 rankAgent
+	// 重排 rank agent
 	chRes := make(chan string)
 	go func() {
 		defer close(chRes)
-		chRes <- rankable.RankCandidate(strings.Join(textArr, "\n"), text)
+		chRes <- this.rank.RankCandidate(strings.Join(textArr, "\n"), text, rerankCount)
 	}()
 	return chRes, nil
 }
