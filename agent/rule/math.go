@@ -7,8 +7,8 @@ func init() {
 type MathRule struct {
 }
 
-func (this *MathRule) DefaultModel() string {
-	return "deepseek"
+func (this *MathRule) Introduction() string {
+	return "擅于解答数学问题，涉及代数、几何、概率等数学相关都可以来问。"
 }
 
 func (this *MathRule) SystemMessage() string {
@@ -20,11 +20,11 @@ isMath: [这里是判断这是不是数学问题，使用true/false回答]
 resolvation: [这里是你的解答]`
 }
 
-func (this *MathRule) ExternalSource() string {
+func (this *MathRule) SourceFile() string {
 	return ""
 }
 
-func (this *MathRule) ExternalSourceMessage() string {
+func (this *MathRule) MessageFromSource(source string, question string) string {
 	return ""
 }
 
