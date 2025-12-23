@@ -28,11 +28,11 @@ func StartRag(reranker Rerankable) *RagManager {
 }
 
 // 预处理
-// 1 文本分块
-// 2 向量化 存储
+// 1 文本分块 chucking
+// 2 向量化 存储 embedding
 // 检索
-// 3.1 召回
-// 3.2 重排
+// 3.1 召回 retrieval
+// 3.2 重排 reranking
 
 type ProgressInfo struct {
 	Current    int
