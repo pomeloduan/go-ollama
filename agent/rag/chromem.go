@@ -15,7 +15,7 @@ type ChromemManager struct {
 
 const ollamaEmbedModelName = "nomic-embed-text-v2-moe"
 
-func StartChromem() *ChromemManager {
+func startChromem() *ChromemManager {
 	return &ChromemManager{db: chromem.NewDB(), collectionMap: make(map[int]*chromem.Collection)}
 }
 

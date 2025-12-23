@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-type SpecialistAgent struct {
+type Specialist struct {
 	ollama    *ollama.OllamaManager
 	rag       *rag.RagManager
 	modelName string
@@ -19,8 +19,8 @@ type SpecialistAgent struct {
 	logger    *logger.ErrorLogger
 }
 
-func StartSpecialistAgent(ollama *ollama.OllamaManager, rag *rag.RagManager, rule rule.Rule, logger *logger.ErrorLogger) *SpecialistAgent {
-	specialist := SpecialistAgent{
+func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule rule.Rule, logger *logger.ErrorLogger) *Specialist {
+	specialist := Specialist{
 		ollama:    ollama,
 		rag:       rag,
 		modelName: ollama.GetAvailableModelName("deepseek"),
@@ -30,7 +30,7 @@ func StartSpecialistAgent(ollama *ollama.OllamaManager, rag *rag.RagManager, rul
 	return &specialist
 }
 
-func (this *SpecialistAgent) prepareChat() {
+func (this *Specialist) prepareChat() {
 	if this.rule.SourceFile() != "" {
 		ragCtx, chProg, err := this.rag.PreprocessFromFile(this.rule.SourceFile())
 		if err != nil {
@@ -56,7 +56,7 @@ func (this *SpecialistAgent) prepareChat() {
 	this.chatCtx = this.ollama.NewChat(this.modelName, this.rule.SystemMessage())
 }
 
-func (this *SpecialistAgent) Chat(chat string) string {
+func (this *Specialist) chat(chat string) string {
 	if this.chatCtx == nil {
 		this.prepareChat()
 	}
