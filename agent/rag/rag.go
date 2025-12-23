@@ -1,7 +1,6 @@
 package rag
 
 import (
-	"go-ollama/logger"
 	"sort"
 	"strings"
 )
@@ -9,28 +8,23 @@ import (
 type RagManager struct {
 	chromem *ChromemManager
 	gse     *GseManager
-	logger  *logger.ErrorLogger
-	chucks  []string
-	rank    Rankable
+	rerank  Rerankable
+
+	autogenRagId int
 }
 
-type Rankable interface {
+type Rerankable interface {
 	RankCandidate(candidates string, text string, num int) string
 }
 
 const retrievalCount = 10
 const rerankCount = 5
 
-// todo rag context
-func StartRag(rank Rankable, logger *logger.ErrorLogger) (*RagManager, error) {
-	chromem, err := StartChromem()
-	if err != nil {
-		return nil, err
-	}
+func StartRag(rerank Rerankable) *RagManager {
+	chromem := StartChromem()
 	gse := StartGse()
-
-	ragManager := RagManager{chromem: chromem, gse: gse, rank: rank, logger: logger}
-	return &ragManager, nil
+	ragManager := RagManager{chromem: chromem, gse: gse, rerank: rerank}
+	return &ragManager
 }
 
 // 预处理
@@ -49,17 +43,26 @@ type ProgressInfo struct {
 }
 
 // 预处理
-func (this *RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, error) {
+func (this *RagManager) PreprocessFromFile(filepath string) (*RagContext, chan ProgressInfo, error) {
+	var ragId = this.autogenRagId
+	this.autogenRagId++
+
 	chucks, err := chucksFromTextFile(filepath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
+	err = this.chromem.newCollection(ragId)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	chProg := make(chan ProgressInfo)
 	go func() {
 		defer close(chProg)
 		for i := 0; i < len(chucks); i++ {
 			words := this.gse.SplitChineseWords(chucks[i])
-			err = this.chromem.AddDocuments(i, words)
+			err = this.chromem.addDocuments(ragId, i, words)
 
 			percentage := float32(i+1) / float32(len(chucks)) * 100
 			// 发送进度信息
@@ -72,14 +75,15 @@ func (this *RagManager) PreprocessFromFile(filepath string) (chan ProgressInfo, 
 			}
 		}
 	}()
-	this.chucks = chucks
-	return chProg, nil
+
+	ragCtx := RagContext{ragId: ragId, chucks: chucks}
+	return &ragCtx, chProg, nil
 }
 
 // 检索
-func (this *RagManager) Query(text string) (chan string, error) {
+func (this *RagManager) Query(ragCtx *RagContext, text string) (chan string, error) {
 	// 召回 向量相似
-	indexArr, err := this.chromem.Query(text, retrievalCount)
+	indexArr, err := this.chromem.query(ragCtx.ragId, text, retrievalCount)
 	if err != nil {
 		return nil, err
 	}
@@ -89,15 +93,15 @@ func (this *RagManager) Query(text string) (chan string, error) {
 	for i := 0; i < len(indexArr); i++ {
 		index := indexArr[i]
 		if i > 0 && index-indexArr[i-1] == 2 {
-			textArr = append(textArr, this.chucks[index-1])
+			textArr = append(textArr, ragCtx.chucks[index-1])
 		}
-		textArr = append(textArr, this.chucks[index])
+		textArr = append(textArr, ragCtx.chucks[index])
 	}
 	// 重排 rank agent
 	chRes := make(chan string)
 	go func() {
 		defer close(chRes)
-		chRes <- this.rank.RankCandidate(strings.Join(textArr, "\n"), text, rerankCount)
+		chRes <- this.rerank.RankCandidate(strings.Join(textArr, "\n"), text, rerankCount)
 	}()
 	return chRes, nil
 }

@@ -19,11 +19,8 @@ type AgentManager struct {
 }
 
 func StartAgentManager(ollama *ollama.OllamaManager, logger *logger.ErrorLogger) (*AgentManager, error) {
-	rank := StartRankAgent(ollama)
-	rag, err := rag.StartRag(rank, logger)
-	if err != nil {
-		return nil, err
-	}
+	rank := StartRerankAgent(ollama)
+	rag := rag.StartRag(rank)
 
 	coordinate := StartCoordinateAgent(ollama)
 
