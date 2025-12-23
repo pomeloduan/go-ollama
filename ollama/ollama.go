@@ -15,7 +15,7 @@ type OllamaManager struct {
 	models []string
 	logger *logger.ErrorLogger
 
-	genChatId int
+	autogenChatId int
 
 	// 数据统计
 	TotalQCount   int
@@ -86,8 +86,8 @@ func (this *OllamaManager) ChatWithoutContext(modelName string, message string) 
 
 // 新的对话
 func (this *OllamaManager) NewChat(modelName string, systemMesssage string) *ChatContext {
-	var chatId = this.genChatId
-	this.genChatId++
+	var chatId = this.autogenChatId
+	this.autogenChatId++
 
 	return newChat(modelName, chatId, systemMesssage)
 }

@@ -5,17 +5,17 @@ import (
 	"strconv"
 )
 
-type RankAgent struct {
+type RerankAgent struct {
 	ollama    *ollama.OllamaManager
 	modelName string
 }
 
-func StartRankAgent(ollama *ollama.OllamaManager) *RankAgent {
-	rank := RankAgent{ollama: ollama, modelName: ollama.GetAvailableModelName("gemma")}
-	return &rank
+func StartRerankAgent(ollama *ollama.OllamaManager) *RerankAgent {
+	rerank := RerankAgent{ollama: ollama, modelName: ollama.GetAvailableModelName("gemma")}
+	return &rerank
 }
 
-func (this *RankAgent) RankCandidate(candidates string, text string, num int) string {
+func (this *RerankAgent) RankCandidate(candidates string, text string, num int) string {
 	message := "话题：" + text +
 		"\n请从以下许多段文字中，先每一段都和话题进行比较，给出一个相关性评分，然后选择相关性最高的" + strconv.Itoa(num) +
 		"段，最后仅回复相关性最高的" + strconv.Itoa(num) +

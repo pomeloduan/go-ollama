@@ -15,6 +15,7 @@ type SpecialistAgent struct {
 	modelName string
 	rule      rule.Rule
 	chatCtx   *ollama.ChatContext
+	ragCtx    *rag.RagContext
 	logger    *logger.ErrorLogger
 }
 
@@ -31,10 +32,11 @@ func StartSpecialistAgent(ollama *ollama.OllamaManager, rag *rag.RagManager, rul
 
 func (this *SpecialistAgent) prepareChat() {
 	if this.rule.SourceFile() != "" {
-		chProg, err := this.rag.PreprocessFromFile(this.rule.SourceFile())
+		ragCtx, chProg, err := this.rag.PreprocessFromFile(this.rule.SourceFile())
 		if err != nil {
 			this.logger.LogError(err, "rag preprocess")
 		} else {
+			this.ragCtx = ragCtx
 			fmt.Println("需要导入外部知识库，请稍等...")
 			errCount := 0
 			for p := range chProg {
@@ -59,7 +61,7 @@ func (this *SpecialistAgent) Chat(chat string) string {
 		this.prepareChat()
 	}
 	if this.rule.SourceFile() != "" {
-		chSource, err := this.rag.Query(chat)
+		chSource, err := this.rag.Query(this.ragCtx, chat)
 		if err != nil {
 			this.logger.LogError(err, "rag query")
 		}

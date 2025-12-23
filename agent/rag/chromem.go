@@ -9,35 +9,40 @@ import (
 
 // 向量数据库
 type ChromemManager struct {
-	db         *chromem.DB
-	collection *chromem.Collection
+	db            *chromem.DB
+	collectionMap map[int]*chromem.Collection
 }
 
 const ollamaEmbedModelName = "nomic-embed-text-v2-moe"
 
-func StartChromem() (*ChromemManager, error) {
-	db := chromem.NewDB()
+func StartChromem() *ChromemManager {
+	return &ChromemManager{db: chromem.NewDB(), collectionMap: make(map[int]*chromem.Collection)}
+}
 
-	collection, err := db.CreateCollection("knowledge", nil, chromem.NewEmbeddingFuncOllama(ollamaEmbedModelName, ""))
+func (this *ChromemManager) newCollection(ragId int) error {
+	collection, err := this.db.CreateCollection(
+		"rag-"+strconv.Itoa(ragId),
+		nil,
+		chromem.NewEmbeddingFuncOllama(ollamaEmbedModelName, ""))
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	chromemManager := ChromemManager{db: db, collection: collection}
-
-	return &chromemManager, nil
+	this.collectionMap[ragId] = collection
+	return nil
 }
 
 // 向量化+存储
-func (this *ChromemManager) AddDocuments(index int, content string) error {
+func (this *ChromemManager) addDocuments(ragId int, index int, content string) error {
 	ctx := context.Background()
-	return this.collection.AddDocument(ctx, chromem.Document{ID: strconv.Itoa(index), Content: content})
+	collection := this.collectionMap[ragId]
+	return collection.AddDocument(ctx, chromem.Document{ID: strconv.Itoa(index), Content: content})
 }
 
 // 向量检索
-func (this *ChromemManager) Query(text string, nResults int) ([]int, error) {
+func (this *ChromemManager) query(ragId int, text string, nResults int) ([]int, error) {
 	ctx := context.Background()
-	res, err := this.collection.Query(ctx, text, nResults, nil, nil)
+	collection := this.collectionMap[ragId]
+	res, err := collection.Query(ctx, text, nResults, nil, nil)
 	if err != nil {
 		return nil, err
 	}
