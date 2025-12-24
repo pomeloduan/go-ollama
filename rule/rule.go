@@ -8,18 +8,18 @@ type RuleManager struct {
 	ruleMap map[string]*Rule
 }
 
-func StartRuleManager() *RuleManager {
+func StartRuleManager() (*RuleManager, error) {
 	// read file
 	ruleConfigMap, err := readConfig("./rule/config.yml")
 	if err != nil {
-
+		return nil, err
 	}
 
 	ruleMap := make(map[string]*Rule)
 	for name, ruleConfig := range ruleConfigMap {
 		ruleMap[name] = &Rule{name: name, config: ruleConfig}
 	}
-	return &RuleManager{ruleMap: ruleMap}
+	return &RuleManager{ruleMap: ruleMap}, nil
 }
 
 func (this *RuleManager) GetGeneralRule() *Rule {
@@ -44,11 +44,11 @@ func (this *Rule) Name() string {
 }
 
 func (this *Rule) Introduction() string {
-	return this.config.introduction
+	return this.config.Introduction
 }
 
 func (this *Rule) SystemMessage() string {
-	return this.config.systemMessage
+	return this.config.SystemMessage
 }
 
 func (this *Rule) NeedRag() bool {
@@ -56,7 +56,7 @@ func (this *Rule) NeedRag() bool {
 }
 
 func (this *Rule) SourceFile() string {
-	return this.config.sourceFile
+	return this.config.SourceFile
 }
 
 func (this *Rule) MessageFromSource(source string, question string) string {
@@ -68,7 +68,7 @@ func (this *Rule) NeedReviewer() bool {
 }
 
 func (this *Rule) ReviewerSystemMessage() string {
-	return this.config.reviewerSystemMessage
+	return this.config.ReviewerSystemMessage
 }
 
 func (this *Rule) ParseReview(text string) ReviewResult {

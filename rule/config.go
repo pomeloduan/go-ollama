@@ -8,14 +8,14 @@ import (
 )
 
 type RuleConfig struct {
-	introduction          string `yaml:"introduction"`
-	systemMessage         string `yaml:"system_message"`
-	sourceFile            string `yaml:"source_file"`
-	reviewerSystemMessage string `yaml:"reviewer_system_message"`
+	Introduction          string `yaml:"introduction"`
+	SystemMessage         string `yaml:"system_message"`
+	SourceFile            string `yaml:"source_file"`
+	ReviewerSystemMessage string `yaml:"reviewer_system_message"`
 }
 
 type RulesConfig struct {
-	rules map[string]RuleConfig `yaml:"rules"`
+	Rules map[string]RuleConfig `yaml:"rules"`
 }
 
 func readConfig(filepath string) (map[string]RuleConfig, error) {
@@ -25,9 +25,10 @@ func readConfig(filepath string) (map[string]RuleConfig, error) {
 	}
 
 	var config RulesConfig
-	if err := yaml.Unmarshal(data, &config); err != nil {
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
 		return nil, fmt.Errorf("解析YAML失败: %v", err)
 	}
 
-	return config.rules, nil
+	return config.Rules, nil
 }

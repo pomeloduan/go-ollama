@@ -21,7 +21,10 @@ type AgentManager struct {
 func StartAgentManager(ollama *ollama.OllamaManager, logger *logger.ErrorLogger) (*AgentManager, error) {
 	rank := startReranker(ollama)
 	rag := rag.StartRag(rank)
-	ruleManager := rule.StartRuleManager()
+	ruleManager, err := rule.StartRuleManager()
+	if err != nil {
+		return nil, err
+	}
 
 	coordinator := startCoordinator(ollama)
 
@@ -44,6 +47,7 @@ func StartAgentManager(ollama *ollama.OllamaManager, logger *logger.ErrorLogger)
 		coordinator:   coordinator,
 		generalAgent:  general,
 		specialistMap: specialistMap,
+		reviewerMap:   reviewerMap,
 		logger:        logger,
 	}
 	return &agentManager, nil
