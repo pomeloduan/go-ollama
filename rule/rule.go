@@ -2,24 +2,26 @@ package rule
 
 import (
 	"strconv"
+	"strings"
 )
 
 type RuleManager struct {
 	ruleMap map[string]*Rule
+	config  *ChatConfig
 }
 
 func StartRuleManager() (*RuleManager, error) {
 	// read file
-	ruleConfigMap, err := readConfig("./config.yml")
+	config, err := readConfig("./rule/config.yml")
 	if err != nil {
 		return nil, err
 	}
 
 	ruleMap := make(map[string]*Rule)
-	for name, ruleConfig := range ruleConfigMap {
-		ruleMap[name] = &Rule{name: name, config: ruleConfig}
+	for name, ruleCfg := range config.Rules {
+		ruleMap[name] = &Rule{name: name, config: &ruleCfg}
 	}
-	return &RuleManager{ruleMap: ruleMap}, nil
+	return &RuleManager{ruleMap: ruleMap, config: config}, nil
 }
 
 func (this *RuleManager) GetGeneralRule() *Rule {
@@ -34,9 +36,33 @@ func (this *RuleManager) GetAllRules() []*Rule {
 	return rules
 }
 
+func (this *RuleManager) RerankMessage(question string, number int, candidates string) string {
+	replacer := strings.NewReplacer(
+		"{question}", question,
+		"{number}", strconv.Itoa(number),
+		"{candidates}", candidates,
+	)
+	return replacer.Replace(this.config.RerankMessage)
+}
+
+func (this *RuleManager) CoordinatorMessage(question string) string {
+	replacer := strings.NewReplacer(
+		"{question}", question,
+	)
+	return replacer.Replace(this.config.CoordinatorMessage)
+}
+
+func (this *RuleManager) CoordinatorSpecialistMessage(name string, introduction string) string {
+	replacer := strings.NewReplacer(
+		"{name}", name,
+		"{introduction}", introduction,
+	)
+	return replacer.Replace(this.config.CoordinatorSpecialistMessage)
+}
+
 type Rule struct {
 	name   string
-	config RuleConfig
+	config *RuleConfig
 }
 
 func (this *Rule) Name() string {
@@ -44,31 +70,77 @@ func (this *Rule) Name() string {
 }
 
 func (this *Rule) Introduction() string {
+	if this.config == nil {
+		return ""
+	}
 	return this.config.Introduction
 }
 
 func (this *Rule) SystemMessage() string {
+	if this.config == nil {
+		return ""
+	}
 	return this.config.SystemMessage
 }
 
 func (this *Rule) NeedRag() bool {
+	if this.config == nil {
+		return false
+	}
 	return this.SourceFile() != ""
 }
 
 func (this *Rule) SourceFile() string {
+	if this.config == nil {
+		return ""
+	}
 	return this.config.SourceFile
 }
 
-func (this *Rule) MessageFromSource(source string, question string) string {
-	return "请阅读以下文字，并优先根据这段内容回答之后的问题：\n" + source + "\n问题：" + question
+func (this *Rule) SourceMessage(source string, question string) string {
+	if this.config == nil {
+		return ""
+	}
+	replacer := strings.NewReplacer(
+		"{source}", source,
+		"{question}", question,
+	)
+	return replacer.Replace(this.config.SourceMessage)
 }
 
 func (this *Rule) NeedReviewer() bool {
+	if this.config == nil {
+		return false
+	}
 	return this.ReviewerSystemMessage() != ""
 }
 
 func (this *Rule) ReviewerSystemMessage() string {
+	if this.config == nil {
+		return ""
+	}
 	return this.config.ReviewerSystemMessage
+}
+
+func (this *Rule) ReviewMessage(question string, answer string) string {
+	if this.config == nil {
+		return ""
+	}
+	replacer := strings.NewReplacer(
+		"{question}", question,
+		"{answer}", answer,
+	)
+	return replacer.Replace(this.config.ReviewMessage)
+}
+
+func (this *Rule) RewriteMessage(review string) string {
+	if this.config == nil {
+		return ""
+	}
+	replacer := strings.NewReplacer(
+		"{review}", review,
+	)
+	return replacer.Replace(this.config.RewriteMessage)
 }
 
 func (this *Rule) ParseReview(text string) ReviewResult {

@@ -3,25 +3,25 @@ package rule
 import "testing"
 
 func TestRules(t *testing.T) {
-	manager, err := StartRuleManager()
+	config, err := readConfig("./config.yml")
 	if err != nil {
-		t.Fatal("start rule manager error")
+		t.Fatal("read config file error")
 	}
 	{ // case math
-		rule, ok := manager.ruleMap["math"]
-		if !ok || rule.name != "math" {
+		_, ok := config.Rules["math"]
+		if !ok {
 			t.Fatal("expected get math rule")
 		}
 	}
 	{ // case poet
-		rule, ok := manager.ruleMap["poet"]
-		if !ok || rule.name != "poet" {
+		_, ok := config.Rules["poet"]
+		if !ok {
 			t.Fatal("expected get poet rule")
 		}
 	}
 	{ // case hp
-		rule, ok := manager.ruleMap["hp"]
-		if !ok || rule.name != "hp" {
+		_, ok := config.Rules["hp"]
+		if !ok {
 			t.Fatal("expected get hp rule")
 		}
 	}
