@@ -10,7 +10,7 @@ type RuleManager struct {
 
 func StartRuleManager() (*RuleManager, error) {
 	// read file
-	ruleConfigMap, err := readConfig("./rule/config.yml")
+	ruleConfigMap, err := readConfig("./config.yml")
 	if err != nil {
 		return nil, err
 	}
