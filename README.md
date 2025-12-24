@@ -37,13 +37,13 @@ This project builds an agent system with the following features:
 │ - hp        │   └──►│ Scoring   │       ┌─────────────┐
 │ - math      │-------│ Feedback  │------►│ Rag Manager │
 │ - poet      │       └─────┬─────┘       │ ---         │
-│ ...         │             │             │ chucking    │
+│ ...         │             │             │ Chucking    │
 └──────┬──────┘             │             │     ▼       │
-       │                    │             │ embedding + │
-       └──────────┬─────────┘             │     ▼     +-│---►Gse Segmentation
-                  │                       │ retrieval + │    Chromem Vector DB
-         ┌────────▼────────┐              │     ▼       │    ┌──────────┐
-         │ Ollama Manager  │              │ reranking +-│---►│ Reranker │
+       │                    │             │ Embedding + │
+       └──────────┬─────────┘             │     ↓     +-│--→ Gse Segmentation
+                  │                       │ Retrieval + │    Chromem Vector DB
+         ┌────────▼────────┐              │     ↓       │    ┌──────────┐
+         │ Ollama Manager  │              │ Reranking +-│---►│ Reranker │
          │ ---             │              └─────────────┘    └─────┬────┘
          │ Ollama Service  │◄──────────────────────────────────────┘
          │ Local LLM       │
@@ -76,6 +76,7 @@ Before running this project, please ensure:
      ollama pull llama2
      ollama pull mistral
      ```
+   - Download at least one embedding model
 
 ## Important Notes
 
@@ -106,7 +107,7 @@ Before running this project, please ensure:
 ## Log Viewing
 
 ```
-error.log
+info.log
 ```
 
 ## Related Links

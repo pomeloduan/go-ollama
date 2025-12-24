@@ -30,11 +30,13 @@ func main() {
 	ollama, err := ollama.StartOllama(ollamaDomain, logger)
 	if err != nil {
 		logger.LogError(err, "lauching")
+		return
 	}
 
 	agent, err := agent.StartAgentManager(ollama, logger)
 	if err != nil {
 		logger.LogError(err, "lauching")
+		return
 	}
 
 	// chatId := newChat(ollama, rule, logger)

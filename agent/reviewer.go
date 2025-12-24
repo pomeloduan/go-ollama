@@ -1,20 +1,20 @@
 package agent
 
 import (
-	"go-ollama/agent/rule"
 	"go-ollama/logger"
 	"go-ollama/ollama"
+	"go-ollama/rule"
 )
 
 type Reviewer struct {
 	ollama    *ollama.OllamaManager
 	modelName string
-	rule      rule.Rule
+	rule      *rule.Rule
 	chatCtx   *ollama.ChatContext
 	logger    *logger.ErrorLogger
 }
 
-func startReviewer(ollama *ollama.OllamaManager, rule rule.Rule, logger *logger.ErrorLogger) *Reviewer {
+func startReviewer(ollama *ollama.OllamaManager, rule *rule.Rule, logger *logger.ErrorLogger) *Reviewer {
 	reviewer := Reviewer{
 		ollama:    ollama,
 		modelName: ollama.GetAvailableModelName("gemma"),
