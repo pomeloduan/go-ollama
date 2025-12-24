@@ -39,7 +39,7 @@ This project builds an agent system with the following features:
 │ - math      │-------│ Feedback  │------►│ Rag Manager │
 │ - poet      │       └─────┬─────┘       │ ---         │
 │ ...         │             │             │ Chucking    │
-└──────┬──────┘             │             │     ▼       │
+└──────┬──────┘             │             │     ↓       │
        │                    │             │ Embedding + │
        └──────────┬─────────┘             │     ↓     +-│--→ Gse Segmentation
                   │                       │ Retrieval + │    Chromem Vector DB
