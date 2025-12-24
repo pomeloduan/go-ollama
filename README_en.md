@@ -52,13 +52,6 @@ This project builds an agent system with the following features:
 
 ```
 
-## Features
-
-- Connect to local Ollama service
-- Simple command-line interface
-- Configurable model parameters
-- Error handling and logging
-
 ## Prerequisites
 
 Before running this project, please ensure:
