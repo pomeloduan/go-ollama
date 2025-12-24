@@ -72,7 +72,7 @@ Before running this project, please ensure:
 2. **Install and run Ollama**:
    - Visit the [Ollama official website](https://ollama.ai/) to download and install
    - Start the Ollama service
-   - Download at least one model, for example:
+   - Download at least one language model, for example:
      ```bash
      ollama pull llama2
      ollama pull mistral
