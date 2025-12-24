@@ -1,4 +1,4 @@
-中文 | [English](README.md)
+中文 | [English](README_en.md)
 
 目前AI Agent的实现多以Python为主，Go语言的相关实践较为缺乏。本项目旨在使用Go语言完整实现一套可本地运行的AI Agent系统，希望能够：
 1. 作为个人学习总结
