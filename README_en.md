@@ -1,4 +1,4 @@
-[中文](README_cn.md) | English
+[中文](README.md) | English
 
 While most AI Agent implementations are in Python, practical examples using Go are relatively scarce. This project is a complete, locally runnable AI Agent system built with Go. It serves as:
 1. A record of my personal learning journey
