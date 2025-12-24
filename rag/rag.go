@@ -1,6 +1,7 @@
 package rag
 
 import (
+	"go-ollama/rule"
 	"sort"
 	"strings"
 )
@@ -81,7 +82,7 @@ func (this *RagManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 }
 
 // 检索
-func (this *RagManager) Query(ragCtx *RagContext, text string) (chan string, error) {
+func (this *RagManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) (chan string, error) {
 	// 召回 向量相似
 	indexArr, err := this.chromem.query(ragCtx.ragId, text, retrievalCount)
 	if err != nil {

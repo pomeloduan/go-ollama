@@ -32,7 +32,7 @@ func (this *Reviewer) review(question string, answer string) rule.ReviewResult {
 	if this.chatCtx == nil {
 		this.prepareChat()
 	}
-	message := "要求：\n" + question + "\n作品：\n" + answer
+	message := this.rule.ReviewMessage(question, answer)
 	review := this.ollama.NextChat(this.chatCtx, message)
 	return this.rule.ParseReview(review)
 }

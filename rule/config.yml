@@ -5,6 +5,7 @@ rules:
     keyword: "哈利 罗恩 赫敏 斯内普"
     system_message: "你是一位小说的爱好者。你的任务是回答关于JK罗琳创作的小说《哈利波特》的问题。"
     source_file: "./source/hp.txt"
+    source_message: "请阅读以下文字，并优先根据这段内容回答之后的问题：\n{source}\n问题：{question}"
   # 诗歌
   poet:
     introduction: "擅于创作诗歌，涉及诗歌相关都可以来问。"
@@ -15,7 +16,12 @@ rules:
       你的回答必须严格遵循以下格式。首先是诗歌的分数，然后是评价，90以下需要尽量给出不够好的点和修改意见。
       score: [这里是诗歌的分数，使用0-100回答]
       review: [这里是你的评价]
+    review_message: "要求：\n{question}\n作品：\n{answer}"
+    rewrite_message: "请参考以下评价重新写作：\n{review}"
   # 数学
   math:
     introduction: "擅于解答数学问题，涉及代数、几何、概率等数学相关都可以来问。"
     system_message: "你是一位数学老师。你的任务是解答数学题。"
+rerank_message: "话题：{question}\n请从以下许多段文字中，先每一段都和话题进行比较，给出一个相关性评分，然后选择相关性最高的{number}段，最后仅回复相关性最高的{number}段文字原文，不需要回复原因和分数：\n{candidates}"
+coordinator_message: "有一个问题需要寻求专家的帮助，问题是：{question}\n请选择与问题相关的适合解答问题的专家，回复专家名字，或者你认为没有专家能够解答，回复NA。专家名字和介绍如下：\n"
+coordinator_specialist_message: "专家名字：{name} 专家介绍：{introduction}\n"

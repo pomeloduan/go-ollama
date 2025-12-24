@@ -19,14 +19,14 @@ type AgentManager struct {
 }
 
 func StartAgentManager(ollama *ollama.OllamaManager, logger *logger.ErrorLogger) (*AgentManager, error) {
-	rank := startReranker(ollama)
-	rag := rag.StartRag(rank)
 	ruleManager, err := rule.StartRuleManager()
 	if err != nil {
 		return nil, err
 	}
+	rank := startReranker(ollama, ruleManager)
+	rag := rag.StartRag(rank)
 
-	coordinator := startCoordinator(ollama)
+	coordinator := startCoordinator(ollama, ruleManager)
 
 	general := startSpecialist(ollama, rag, ruleManager.GetGeneralRule(), logger)
 	specialistMap := make(map[string]*Specialist)
@@ -65,7 +65,8 @@ func (this *AgentManager) Chat(chat string) string {
 	if ok {
 		review := reviewer.review(chat, answer)
 		if review.Score < 80 {
-			answer = specialist.chat("请参考以下评价重新写作：\n" + review.Review)
+			message := specialist.rule.RewriteMessage(review.Review)
+			answer = specialist.chat(message)
 		}
 	}
 	return answer

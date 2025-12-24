@@ -31,7 +31,7 @@ func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule *ru
 }
 
 func (this *Specialist) prepareChat() {
-	if this.rule.SourceFile() != "" {
+	if this.rule.NeedRag() {
 		ragCtx, chProg, err := this.rag.PreprocessFromFile(this.rule.SourceFile())
 		if err != nil {
 			this.logger.LogError(err, "rag preprocess")
@@ -60,8 +60,8 @@ func (this *Specialist) chat(chat string) string {
 	if this.chatCtx == nil {
 		this.prepareChat()
 	}
-	if this.rule.SourceFile() != "" {
-		chSource, err := this.rag.Query(this.ragCtx, chat)
+	if this.rule.NeedRag() {
+		chSource, err := this.rag.Query(this.ragCtx, chat, this.rule)
 		if err != nil {
 			this.logger.LogError(err, "rag query")
 		}
@@ -69,7 +69,7 @@ func (this *Specialist) chat(chat string) string {
 		for s := range chSource {
 			source += s
 		}
-		chat = this.rule.MessageFromSource(source, chat)
+		chat = this.rule.SourceMessage(source, chat)
 	}
 	return this.ollama.NextChat(this.chatCtx, chat)
 }
