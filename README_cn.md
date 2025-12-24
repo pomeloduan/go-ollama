@@ -89,7 +89,7 @@
 2. **安装并运行 Ollama**: 
    - 访问 [Ollama 官网](https://ollama.ai/) 下载并安装
    - 启动 Ollama 服务
-   - 下载至少一个模型，例如：
+   - 下载至少一个语言模型，例如：
      ```bash
      ollama pull llama2
      ollama pull mistral
