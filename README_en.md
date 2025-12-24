@@ -14,9 +14,9 @@ This project builds an agent system with the following features:
 - **Prompt Management**: Optimizes dialogue instructions for the model
 - **Context Maintenance**: Maintains coherence across multi-turn conversations
 - **RAG Integration**: Incorporates Retrieval-Augmented Generation technology to enhance the accuracy of professional question answering
-- **Multi-Agent Collaboration**: Employs a centralized architecture where a coordinator allocates tasks and specialist agents handle domain-specific problems
+- **Multi-Agent Collaboration**: Employs a centralized architecture where a Coordinator allocates tasks and Specialist agents handle domain-specific problems
 - **Reviewer Mode**: Adheres to a Generate → Review → Refine workflow to ensure continuous optimization of output quality
-- **Agent Configuration**: Uses YAML configuration files to dynamically define and generate specialist agents and reviewer agents
+- **Agent Configuration**: Uses YAML configuration files to dynamically define and generate Specialist agents and Reviewer agents
 
 ```
 . . . . . . . . . . . . . . . . . . .
