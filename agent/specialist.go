@@ -2,10 +2,10 @@ package agent
 
 import (
 	"fmt"
-	"go-ollama/agent/rag"
-	"go-ollama/agent/rule"
 	"go-ollama/logger"
 	"go-ollama/ollama"
+	"go-ollama/rag"
+	"go-ollama/rule"
 	"strconv"
 )
 
@@ -13,24 +13,19 @@ type Specialist struct {
 	ollama    *ollama.OllamaManager
 	rag       *rag.RagManager
 	modelName string
-	rule      rule.Rule
+	rule      *rule.Rule
 	chatCtx   *ollama.ChatContext
 	ragCtx    *rag.RagContext
 	logger    *logger.ErrorLogger
-
-	reviewer *Reviewer
 }
 
-func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule rule.Rule, logger *logger.ErrorLogger) *Specialist {
+func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule *rule.Rule, logger *logger.ErrorLogger) *Specialist {
 	specialist := Specialist{
 		ollama:    ollama,
 		rag:       rag,
 		modelName: ollama.GetAvailableModelName("deepseek"),
 		rule:      rule,
 		logger:    logger,
-	}
-	if rule.ReviewerSystemMessage() != "" {
-		specialist.reviewer = startReviewer(ollama, rule, logger)
 	}
 	return &specialist
 }
@@ -76,14 +71,5 @@ func (this *Specialist) chat(chat string) string {
 		}
 		chat = this.rule.MessageFromSource(source, chat)
 	}
-	answer := this.ollama.NextChat(this.chatCtx, chat)
-	answer = this.rule.ParseAnswer(answer)
-	if this.rule.ReviewerSystemMessage() != "" {
-		review := this.reviewer.review(chat, answer)
-		if review.Score < 86 {
-			answer = this.ollama.NextChat(this.chatCtx, "请参考以下评价重新写作：\n"+review.Review)
-			answer = this.rule.ParseAnswer(answer)
-		}
-	}
-	return answer
+	return this.ollama.NextChat(this.chatCtx, chat)
 }

@@ -40,9 +40,9 @@ This project builds an agent system with the following features:
 │ ...         │             │             │ chucking    │
 └──────┬──────┘             │             │     ▼       │
        │                    │             │ embedding + │
-       └──────────┬─────────┘             │     ▼     +-│---►Gse Segmentation
+       └──────────┬─────────┘             │     ↓     +-│--→ Gse Segmentation
                   │                       │ retrieval + │    Chromem Vector DB
-         ┌────────▼────────┐              │     ▼       │    ┌──────────┐
+         ┌────────▼────────┐              │     ↓       │    ┌──────────┐
          │ Ollama Manager  │              │ reranking +-│---►│ Reranker │
          │ ---             │              └─────────────┘    └─────┬────┘
          │ Ollama Service  │◄──────────────────────────────────────┘
@@ -76,6 +76,7 @@ Before running this project, please ensure:
      ollama pull llama2
      ollama pull mistral
      ```
+   - Download at least one embedding model
 
 ## Important Notes
 
@@ -106,7 +107,7 @@ Before running this project, please ensure:
 ## Log Viewing
 
 ```
-error.log
+info.log
 ```
 
 ## Related Links

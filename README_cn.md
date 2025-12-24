@@ -38,11 +38,11 @@
 │ - math      │-------│ Feedback  │------►│ Rag Manager │
 │ - poet      │       └─────┬─────┘       │ ---         │
 │ ...         │             │             │ chucking    │
-└──────┬──────┘             │             │     ▼       │
+└──────┬──────┘             │             │     ↓       │
        │                    │             │ embedding + │
-       └──────────┬─────────┘             │     ▼     +-│---►Gse Segmentation
+       └──────────┬─────────┘             │     ↓     +-│--→ Gse Segmentation
                   │                       │ retrieval + │    Chromem Vector DB
-         ┌────────▼────────┐              │     ▼       │    ┌──────────┐
+         ┌────────▼────────┐              │     ↓       │    ┌──────────┐
          │ Ollama Manager  │              │ reranking +-│---►│ Reranker │
          │ ---             │              └─────────────┘    └─────┬────┘
          │ Ollama Service  │◄──────────────────────────────────────┘
@@ -88,6 +88,7 @@ rag效果（需要导入《哈利波特与魔法石》16章内容）
      ollama pull llama2
      ollama pull mistral
      ```
+   - 下载至少一个向量模型
 
 ## 注意事项
 
@@ -118,7 +119,7 @@ rag效果（需要导入《哈利波特与魔法石》16章内容）
 ## 日志查看
 
 ```
-error.log
+info.log
 ```
 
 

@@ -1,36 +1,41 @@
 package agent
 
 import (
-	"go-ollama/agent/rag"
-	"go-ollama/agent/rule"
 	"go-ollama/logger"
 	"go-ollama/ollama"
-	"sync"
+	"go-ollama/rag"
+	"go-ollama/rule"
 )
 
 type AgentManager struct {
 	ollama        *ollama.OllamaManager
 	rag           *rag.RagManager
+	rule          *rule.RuleManager
 	coordinator   *Coordinator
 	generalAgent  *Specialist
 	specialistMap map[string]*Specialist
-	muLock        sync.Mutex
+	reviewerMap   map[string]*Reviewer
 	logger        *logger.ErrorLogger
 }
 
 func StartAgentManager(ollama *ollama.OllamaManager, logger *logger.ErrorLogger) (*AgentManager, error) {
 	rank := startReranker(ollama)
 	rag := rag.StartRag(rank)
+	ruleManager := rule.StartRuleManager()
 
 	coordinator := startCoordinator(ollama)
 
-	general := startSpecialist(ollama, rag, &rule.GeneralRule{}, logger)
+	general := startSpecialist(ollama, rag, ruleManager.GetGeneralRule(), logger)
 	specialistMap := make(map[string]*Specialist)
-	for _, n := range rule.AllRuleNames() {
-		rule := rule.GetRule(n)
+	reviewerMap := make(map[string]*Reviewer)
+	for _, rule := range ruleManager.GetAllRules() {
 		specialist := startSpecialist(ollama, rag, rule, logger)
-		specialistMap[n] = specialist
-		coordinator.addSpecialist(n, rule.Introduction())
+		specialistMap[rule.Name()] = specialist
+		coordinator.addSpecialist(rule.Name(), rule.Introduction())
+		if rule.NeedReviewer() {
+			reviewer := startReviewer(ollama, rule, logger)
+			reviewerMap[rule.Name()] = reviewer
+		}
 	}
 
 	agentManager := AgentManager{
@@ -46,10 +51,18 @@ func StartAgentManager(ollama *ollama.OllamaManager, logger *logger.ErrorLogger)
 
 func (this *AgentManager) Chat(chat string) string {
 	// call coordinator
-	specialistName := this.coordinator.askForSpecialist(chat)
-	specialist, ok := this.specialistMap[specialistName]
+	name := this.coordinator.askForSpecialist(chat)
+	specialist, ok := this.specialistMap[name]
 	if !ok {
 		specialist = this.generalAgent
 	}
-	return specialist.chat(chat)
+	answer := specialist.chat(chat)
+	reviewer, ok := this.reviewerMap[name]
+	if ok {
+		review := reviewer.review(chat, answer)
+		if review.Score < 80 {
+			answer = specialist.chat("请参考以下评价重新写作：\n" + review.Review)
+		}
+	}
+	return answer
 }

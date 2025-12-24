@@ -7,4 +7,7 @@ require (
 	github.com/philippgille/chromem-go v0.7.0
 )
 
-require github.com/vcaesar/cedar v0.20.2 // indirect
+require (
+	github.com/vcaesar/cedar v0.20.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0
+)
