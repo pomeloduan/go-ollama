@@ -2,7 +2,7 @@ package rule
 
 import "testing"
 
-func TestGetMathRule(t *testing.T) {
+func TestRules(t *testing.T) {
 	manager, err := StartRuleManager()
 	if err != nil {
 		t.Fatal("start rule manager error")
