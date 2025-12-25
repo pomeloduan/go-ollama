@@ -1,22 +1,22 @@
-[中文](README_cn.md) | English
+中文 | [English](README_en.md)
 
-While most AI Agent implementations are in Python, practical examples using Go are relatively scarce. This project is a complete, locally runnable AI Agent system built with Go. It serves as:
-1. A record of my personal learning journey
-2. A reference for AI development within the Go community
-3. A space to exchange ideas with others interested in building AI Agents and learning Go language
+目前AI Agent的实现多以Python为主，Go语言的相关实践较为缺乏。本项目旨在使用Go语言完整实现一套可本地运行的AI Agent系统，希望能够：
+1. 作为个人学习总结
+2. 为Go社区提供AI开发的参考示例
+3. 与其他关注AI agent开发和Go语言的小伙伴交流
 
-# Ollama Local Service Demo
+# Ollama 本地服务 Demo
 
-This is a Go sample project that demonstrates how to call a local Ollama AI model with minimal code.
+这是一个 Go 语言演示项目，展示了如何用最少代码调用本地 Ollama AI 模型。
 
-This project builds an agent system with the following features:
+本项目构建了包含如下功能的智能体系统：
 
-- **Prompt Management**: Optimizes dialogue instructions for the model
-- **Context Maintenance**: Maintains coherence across multi-turn conversations
-- **RAG Integration**: Incorporates Retrieval-Augmented Generation technology to enhance the accuracy of professional question answering
-- **Multi-Agent Collaboration**: Employs a centralized architecture where a coordinator allocates tasks and specialist agents handle domain-specific problems
-- **Reviewer Mode**: Adheres to a Generate → Review → Refine workflow to ensure continuous optimization of output quality
-- **Agent Configuration**: Uses YAML configuration files to dynamically define and generate specialist agents and reviewer agents
+- **提示词管理**：优化与模型的对话指令
+- **上下文维护**：保持多轮对话连贯性
+- **RAG 集成**：集成检索增强生成技术，提升专业问题解答的准确性
+- **多智能体协作**：采用集中式架构，由协调者Coordinator分配任务，专家Specialist智能体处理特定领域问题
+- **评审者模式**：遵循 生成→评审→改进 流程，确保输出质量持续优化
+- **智能体配置化**：使用 YAML 文件动态定义和生成专家Specialist和评审者Reviewer智能体
 
 ```
 . . . . . . . . . . . . . . . . . . .
@@ -52,69 +52,125 @@ This project builds an agent system with the following features:
 
 ```
 
-## Features
+### RAG效果
+(需要访问外部知识《哈利波特与魔法石》内容)
+```
+知识库预处理，需要一些时间
+进度：100.0% 第109项，共109项
+等待提问 -->
+哈利和罗恩认为谁想去偷魔法石？
+哈利和罗恩认为斯内普（西弗勒斯·斯内普）是想要偷魔法石的人。在对话中，罗恩明确表示：“如果再不抓紧时间，他就已经把魔法石拿到手了！”
+这里的“他”指的是斯内普。而哈利在得知斯内普可能参与偷魔法石后，立即建议三人一起行动，以阻止他。
+等待提问 -->
+下棋的过程中，哈利代替了什么棋子，罗恩代替了什么棋子？
+根据文本内容，在下棋的过程中：
+哈利代替了主教的位置。
+罗恩代替了骑士的角色。
+赫敏则代替了城堡。三人通过扮演棋子并遵循象棋规则，最终战胜了白棋，成功通过了房间。
+```
 
-- Connect to local Ollama service
-- Simple command-line interface
-- Configurable model parameters
-- Error handling and logging
+### 生成→评审→改进
+```
+q1: 请以猫猫为主题写一首诗
 
-## Prerequisites
+a1: 《猫竹》
+独坐竹林闲，眸含秋水浅。
+忽闻花影动，轻步入云烟。
 
-Before running this project, please ensure:
+a2: score: 75
+review: 这首诗以“猫猫”为主题，但对猫的描绘相对简单，更偏向于一种意境的营造。整体而言，诗歌语言简洁，意境优美，但仍有一些可以提升的地方。
 
-1. **Install Go**: Version 1.23 or higher
+优点：
+
+*  **意境不错：** “独坐竹林闲，眸含秋水浅” 和 “轻步入云烟” 营造了一种宁静、优雅、神秘的意境，符合“猫猫”这一主题的想象。
+*  **语言流畅：** 诗歌的语言流畅，读起来朗朗上口，有一定的韵律感。
+*  **运用了常见的意象：** 竹林、秋水、云烟等意象都比较常见，容易理解，也增加了诗歌的画面感。
+
+不足之处：
+
+*  **缺乏对猫的特征描写：** 诗歌主要描绘了环境，而对猫的特征、动作、神态等缺乏体现，导致“猫猫”主题略显突兀。例如，可以加入猫的慵懒、优雅、玩耍等特点。
+*  **“眸含秋水浅”略显 cliché：** “眸含秋水浅” 这种说法略显俗套，可以尝试更具创意的表达猫的眼睛。
+*  **结构可以更精炼：** 诗歌的结构比较简单，可以尝试调整，让诗歌更紧凑、更有力量感。
+
+修改建议：
+
+可以尝试在诗歌中加入一些更具猫的特征，例如：
+
+*  “蜷卧竹影里，绿瞳闪星辉。”
+*  “悄步追花影，轻移优雅姿。”
+
+或者，可以尝试用更具体的词语来描绘猫的眼睛：
+
+*  “琥珀眸如蜜，闪烁着温柔。”
+
+总的来说，这是一首有潜力的诗歌，只要在描写细节和结构上进行一些调整，就可以提升诗歌的质量。
+
+a1: 《竹影狸奴》
+月透竹帘疏，狸奴卧石癯。
+眸凝星子坠，轻影入云初。
+露湿苔痕滑，风摇竹影虚。
+忽闻花动处，四顾寂无徒。
+
+注：本诗延续王维诗中的空灵禅意，以竹林月色为背景，通过"狸奴卧石"、"星子坠眸"等意象暗藏猫影。末句"四顾寂无徒"既呼应王维《鹿柴》的幽邃意境，又以猫的突然出现打破寂静，形成动静相宜的戏剧性张力。全诗用典自然，既保持了王维式的简淡清雅，又在细节处暗藏猫的灵性特征。
+```
+
+## 前提条件
+
+在运行此项目之前，请确保：
+
+1. **安装 Go**: 版本 1.23 或更高
    ```bash
-   # Check Go version
+   # 检查 Go 版本
    go version
    ```
 
-2. **Install and run Ollama**:
-   - Visit the [Ollama official website](https://ollama.ai/) to download and install
-   - Start the Ollama service
-   - Download at least one language model, for example:
+2. **安装并运行 Ollama**: 
+   - 访问 [Ollama 官网](https://ollama.ai/) 下载并安装
+   - 启动 Ollama 服务
+   - 下载至少一个语言模型，例如：
      ```bash
      ollama pull llama2
      ollama pull mistral
      ```
-   - Download at least one embedding model
+   - 下载至少一个向量模型
 
-## Important Notes
+## 注意事项
 
-1. **Ensure the Ollama service is running**:
+1. **确保 Ollama 服务正在运行**：
    ```bash
-   # Check Ollama service status
+   # 检查 Ollama 服务状态
    curl http://localhost:11434/api/tags
    ```
 
-2. **Model availability**: Ensure the required models are downloaded and available
+2. **模型可用性**：确保所需的模型已下载并可用
 
-3. **Performance considerations**: Response times may vary depending on model size and hardware configuration
+3. **性能考虑**：根据模型大小和硬件配置，响应时间可能有所不同
 
-## Common Issues
+## 常见问题
 
-1. **Connection failure**:
-   - Check if the Ollama service is running: `ollama serve`
-   - Confirm that port 11434 is available
+1. **连接失败**：
+   - 检查 Ollama 服务是否运行：`ollama serve`
+   - 确认端口 11434 是否可用
 
-2. **Model not found**:
-   - List installed models: `ollama list`
-   - Download the required model: `ollama pull <model-name>`
+2. **模型未找到**：
+   - 列出已安装的模型：`ollama list`
+   - 下载所需模型：`ollama pull <model-name>`
 
-3. **Insufficient memory**:
-   - Try using smaller models
-   - Close other memory-intensive applications
+3. **内存不足**：
+   - 尝试使用较小的模型
+   - 关闭其他占用内存的应用程序
 
-## Log Viewing
+## 日志查看
 
 ```
 info.log
 ```
 
-## Related Links
 
-- [Ollama Official Website](https://ollama.ai/)
+## 相关链接
+
+- [Ollama 官网](https://ollama.ai/)
 - [Ollama GitHub](https://github.com/ollama/ollama)
-- [Go Official Documentation](https://golang.org/doc/)
+- [Go 官方文档](https://golang.org/doc/)
 
-**Note**: This is a demonstration project suitable for learning and testing purposes.
+**提示**: 这是一个演示项目，适用于学习和测试目的。
