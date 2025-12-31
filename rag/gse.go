@@ -2,6 +2,7 @@ package rag
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/go-ego/gse"
 )
@@ -12,13 +13,12 @@ type GseManager struct {
 	seg gse.Segmenter // GSE 分词器实例
 }
 
-// startGseManager 创建并初始化中文分词管理器
+// newGseManager 创建并初始化中文分词管理器
 // 加载中文词典（zh_s 表示简体中文）
-func startGseManager() *GseManager {
+func newGseManager() *GseManager {
 	var seg gse.Segmenter
 	seg.LoadDict("zh_s")
-	gseManager := GseManager{seg: seg}
-	return &gseManager
+	return &GseManager{seg: seg}
 }
 
 // splitChineseWords 对中文文本进行分词

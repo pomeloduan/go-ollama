@@ -3,27 +3,55 @@ package logger
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 )
 
-// ErrorLogger 错误日志记录器
-type ErrorLogger struct {
+// ErrorLogger 错误日志记录器接口
+type ErrorLogger interface {
+	LogError(err error, context ...string) error
+	LogInfo(info string) error
+	Close() error
+}
+
+// errorLogger 错误日志记录器实现（包私有）
+type errorLogger struct {
 	file *os.File
 }
 
-// NewErrorLogger 创建新的错误日志记录器
-func NewErrorLogger(filename string) (*ErrorLogger, error) {
+var (
+	loggerInstance *errorLogger
+	loggerOnce     sync.Once
+	loggerInitErr  error
+)
+
+// newErrorLogger 创建并初始化错误日志记录器实例
+// 参数 filename: 日志文件路径
+// 返回: errorLogger 实例、error
+func newErrorLogger(filename string) (*errorLogger, error) {
 	// 打开或创建日志文件（追加模式）
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("无法打开日志文件: %v", err)
 	}
 
-	return &ErrorLogger{file: file}, nil
+	return &errorLogger{file: file}, nil
+}
+
+// StartErrorLogger 获取错误日志记录器单例
+func StartErrorLogger(filename string) (ErrorLogger, error) {
+	loggerOnce.Do(func() {
+		loggerInstance, err = newErrorLogger(filename)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return loggerInstance, nil
 }
 
 // LogError 记录错误到文件
-func (this *ErrorLogger) LogError(err error, context ...string) error {
+func (this *errorLogger) LogError(err error, context ...string) error {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 
 	// 构建日志条目
@@ -48,7 +76,8 @@ func (this *ErrorLogger) LogError(err error, context ...string) error {
 	return this.file.Sync()
 }
 
-func (this *ErrorLogger) LogInfo(info string) error {
+// LogInfo 记录信息到文件
+func (this *errorLogger) LogInfo(info string) error {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 
 	// 构建日志条目
@@ -66,7 +95,7 @@ func (this *ErrorLogger) LogInfo(info string) error {
 }
 
 // Close 关闭日志文件
-func (this *ErrorLogger) Close() error {
+func (this *errorLogger) Close() error {
 	if this.file != nil {
 		return this.file.Close()
 	}

@@ -8,13 +8,13 @@ import (
 // Reranker 重排器，用于对 RAG 检索结果进行重排
 // 使用 LLM 评估检索到的候选文档与问题的相关性，选择最相关的文档
 type Reranker struct {
-	ollama    *ollama.OllamaManager // Ollama 管理器
-	modelName string                // 使用的模型名称
-	rule      *rule.RuleManager     // 规则管理器，包含重排提示词模板
+	ollama    ollama.OllamaManager // Ollama 管理器
+	modelName string               // 使用的模型名称
+	rule      rule.RuleManager     // 规则管理器，包含重排提示词模板
 }
 
 // newReranker 创建并初始化重排序器实例
-func newReranker(ollama *ollama.OllamaManager, rule *rule.RuleManager) *Reranker {
+func newReranker(ollama ollama.OllamaManager, rule rule.RuleManager) *Reranker {
 	reranker := Reranker{
 		ollama:    ollama,
 		modelName: ollama.GetAvailableModelName("gemma"),
