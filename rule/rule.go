@@ -25,7 +25,6 @@ type ruleManager struct {
 var (
 	ruleInstance *ruleManager
 	ruleOnce     sync.Once
-	ruleInitErr  error
 )
 
 // newRuleManager 创建并初始化规则管理器实例
@@ -48,6 +47,7 @@ func newRuleManager() (*ruleManager, error) {
 // 从配置文件读取规则，创建规则对象
 // 返回: RuleManager 实例、error
 func StartRuleManager() (RuleManager, error) {
+	var err error
 	ruleOnce.Do(func() {
 		ruleInstance, err = newRuleManager()
 	})

@@ -45,7 +45,6 @@ type ollamaManager struct {
 var (
 	ollamaInstance *ollamaManager
 	ollamaOnce     sync.Once
-	ollamaInitErr  error
 )
 
 // newOllamaManager 创建并初始化 Ollama 管理器实例
@@ -78,6 +77,7 @@ func newOllamaManager(domain string, logger logger.ErrorLogger) (*ollamaManager,
 // 参数 logger: 日志记录器
 // 返回: OllamaManager 实例、error
 func StartOllamaManager(domain string, logger logger.ErrorLogger) (OllamaManager, error) {
+	var err error
 	ollamaOnce.Do(func() {
 		ollamaInstance, err = newOllamaManager(domain, logger)
 	})
