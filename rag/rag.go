@@ -17,9 +17,9 @@ type RagManager interface {
 
 // ragManager RAG 管理器实现（包私有）
 type ragManager struct {
-	chromem  chromemManager // 向量数据库管理器
-	gse      gseManager     // 中文分词管理器
-	reranker Rerankable     // 重排序器接口
+	chromem  *ChromemManager // 向量数据库管理器
+	gse      *GseManager     // 中文分词管理器
+	reranker Rerankable      // 重排序器接口
 
 	autogenRagId int // 自动生成的 RAG 上下文 ID
 }
@@ -31,6 +31,7 @@ type Rerankable interface {
 
 // retrievalCount 向量检索返回的候选文档数量
 const retrievalCount = 10
+
 // rerankingCount 重排序后返回的最终文档数量
 const rerankingCount = 5
 
@@ -88,8 +89,7 @@ func (this *ragManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 		return nil, nil, err
 	}
 
-	chromemPtr := &this.chromem
-	err = chromemPtr.newCollection(ragId)
+	err = this.chromem.newCollection(ragId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -100,10 +100,9 @@ func (this *ragManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 		defer close(chProg)
 		for i := 0; i < len(chunks); i++ {
 			// 对中文文本进行分词，提升向量化效果
-			gsePtr := &this.gse
-			words := gsePtr.splitChineseWords(chunks[i])
+			words := this.gse.splitChineseWords(chunks[i])
 			// 将文档添加到向量数据库（自动进行向量化）
-			err = chromemPtr.addDocuments(ragId, i, words)
+			err = this.chromem.addDocuments(ragId, i, words)
 
 			percentage := float32(i+1) / float32(len(chunks)) * 100
 			// 发送进度信息
@@ -130,8 +129,7 @@ func (this *ragManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 // 注意：返回的 channel 需要调用者消费
 func (this *ragManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) (chan string, error) {
 	// 1. 向量相似度召回：检索最相似的文档块索引
-	chromemPtr := &this.chromem
-	indexArr, err := chromemPtr.query(ragCtx.ragId, text, retrievalCount)
+	indexArr, err := this.chromem.query(ragCtx.ragId, text, retrievalCount)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +146,7 @@ func (this *ragManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) 
 		}
 		textArr = append(textArr, ragCtx.chunks[index])
 	}
-	
+
 	// 3. 使用 LLM 对候选文档进行重排，选择最相关的文档
 	chRes := make(chan string)
 	go func() {
