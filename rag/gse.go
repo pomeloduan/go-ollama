@@ -12,9 +12,9 @@ type GseManager struct {
 	seg gse.Segmenter // GSE 分词器实例
 }
 
-// startGse 创建并初始化中文分词管理器
+// startGseManager 创建并初始化中文分词管理器
 // 加载中文词典（zh_s 表示简体中文）
-func startGse() *GseManager {
+func startGseManager() *GseManager {
 	var seg gse.Segmenter
 	seg.LoadDict("zh_s")
 	gseManager := GseManager{seg: seg}

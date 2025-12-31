@@ -21,10 +21,10 @@ type Specialist struct {
 	logger    *logger.ErrorLogger   // 日志记录器
 }
 
-// startSpecialist 创建并初始化专家实例
+// newSpecialist 创建并初始化专家实例
 // 参数 rag: RAG 管理器
 // 参数 rule: 专家规则配置
-func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule *rule.Rule, logger *logger.ErrorLogger) *Specialist {
+func newSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule *rule.Rule, logger *logger.ErrorLogger) *Specialist {
 	specialist := Specialist{
 		ollama:    ollama,
 		rag:       rag,

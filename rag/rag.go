@@ -26,9 +26,9 @@ const retrievalCount = 10
 // rerankingCount 重排序后返回的最终文档数量
 const rerankingCount = 5
 
-func StartRag(reranker Rerankable) *RagManager {
-	chromem := startChromem()
-	gse := startGse()
+func StartRagManager(reranker Rerankable) *RagManager {
+	chromem := startChromemManager()
+	gse := startGseManager()
 	ragManager := RagManager{chromem: chromem, gse: gse, reranker: reranker}
 	return &ragManager
 }

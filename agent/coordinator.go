@@ -13,8 +13,8 @@ type Coordinator struct {
 	rule          *rule.RuleManager     // 规则管理器
 }
 
-// startCoordinator 创建并初始化协调者实例
-func startCoordinator(ollama *ollama.OllamaManager, rule *rule.RuleManager) *Coordinator {
+// newCoordinator 创建并初始化协调者实例
+func newCoordinator(ollama *ollama.OllamaManager, rule *rule.RuleManager) *Coordinator {
 	coordinator := Coordinator{
 		ollama:        ollama,
 		modelName:     ollama.GetAvailableModelName("deepseek"),

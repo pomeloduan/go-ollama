@@ -26,12 +26,12 @@ type OllamaManager struct {
 	TotalToken    int           // 总 token 使用量
 }
 
-// StartOllama 初始化 Ollama 管理器
+// StartOllamaManager 初始化 Ollama 管理器
 // 检查服务是否运行，获取可用模型列表
 // 参数 domain: Ollama 服务地址
 // 参数 logger: 日志记录器
 // 返回: OllamaManager 实例、error
-func StartOllama(domain string, logger *logger.ErrorLogger) (*OllamaManager, error) {
+func StartOllamaManager(domain string, logger *logger.ErrorLogger) (*OllamaManager, error) {
 	// 1. 检查 Ollama 服务是否运行
 	_, err := http.Get(domain)
 	if err != nil {

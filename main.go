@@ -29,7 +29,7 @@ func main() {
 	defer logger.Close()
 
 	// 连接本地模型
-	ollama, err := ollama.StartOllama(ollamaDomain, logger)
+	ollama, err := ollama.StartOllamaManager(ollamaDomain, logger)
 	if err != nil {
 		logger.LogError(err, "launching")
 		return

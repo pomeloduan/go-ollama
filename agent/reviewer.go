@@ -16,8 +16,8 @@ type Reviewer struct {
 	logger    *logger.ErrorLogger   // 日志记录器
 }
 
-// startReviewer 创建并初始化评审者实例
-func startReviewer(ollama *ollama.OllamaManager, rule *rule.Rule, logger *logger.ErrorLogger) *Reviewer {
+// newReviewer 创建并初始化评审者实例
+func newReviewer(ollama *ollama.OllamaManager, rule *rule.Rule, logger *logger.ErrorLogger) *Reviewer {
 	reviewer := Reviewer{
 		ollama:    ollama,
 		modelName: ollama.GetAvailableModelName("gemma"),

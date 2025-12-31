@@ -17,8 +17,8 @@ type ChromemManager struct {
 // ollamaEmbedModelName Ollama 嵌入模型名称，用于文档向量化
 const ollamaEmbedModelName = "nomic-embed-text-v2-moe"
 
-// startChromem 创建并初始化向量数据库管理器
-func startChromem() *ChromemManager {
+// startChromemManager 创建并初始化向量数据库管理器
+func startChromemManager() *ChromemManager {
 	return &ChromemManager{db: chromem.NewDB(), collectionMap: make(map[int]*chromem.Collection)}
 }
 

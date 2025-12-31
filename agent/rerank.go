@@ -13,8 +13,8 @@ type Reranker struct {
 	rule      *rule.RuleManager     // 规则管理器，包含重排提示词模板
 }
 
-// startReranker 创建并初始化重排序器实例
-func startReranker(ollama *ollama.OllamaManager, rule *rule.RuleManager) *Reranker {
+// newReranker 创建并初始化重排序器实例
+func newReranker(ollama *ollama.OllamaManager, rule *rule.RuleManager) *Reranker {
 	reranker := Reranker{
 		ollama:    ollama,
 		modelName: ollama.GetAvailableModelName("gemma"),

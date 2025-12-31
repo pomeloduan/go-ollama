@@ -38,22 +38,22 @@ func StartAgentManager(ollama *ollama.OllamaManager, logger *logger.ErrorLogger)
 	}
 
 	// 2 rag
-	reranker := startReranker(ollama, ruleManager)
-	rag := rag.StartRag(reranker)
+	reranker := newReranker(ollama, ruleManager)
+	rag := rag.StartRagManager(reranker)
 
 	// 3 coordinator
-	coordinator := startCoordinator(ollama, ruleManager)
+	coordinator := newCoordinator(ollama, ruleManager)
 
 	// 4 specialist + reviewer
-	general := startSpecialist(ollama, rag, ruleManager.GetGeneralRule(), logger)
+	general := newSpecialist(ollama, rag, ruleManager.GetGeneralRule(), logger)
 	specialistMap := make(map[string]*Specialist)
 	reviewerMap := make(map[string]*Reviewer)
 	for _, rule := range ruleManager.GetAllRules() {
-		specialist := startSpecialist(ollama, rag, rule, logger)
+		specialist := newSpecialist(ollama, rag, rule, logger)
 		specialistMap[rule.Name()] = specialist
 		coordinator.addSpecialist(rule.Name(), rule.Introduction())
 		if rule.NeedReviewer() {
-			reviewer := startReviewer(ollama, rule, logger)
+			reviewer := newReviewer(ollama, rule, logger)
 			reviewerMap[rule.Name()] = reviewer
 		}
 	}
