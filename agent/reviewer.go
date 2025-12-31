@@ -29,23 +29,28 @@ func newReviewer(ollama ollama.OllamaManager, rule *rule.Rule, logger logger.Err
 
 // prepareChat 初始化评审者的对话上下文
 // 设置评审者的系统提示词
-func (this *Reviewer) prepareChat() {
-	this.chatCtx = this.ollama.NewChat(this.modelName, this.rule.ReviewerSystemMessage())
+func (r *Reviewer) prepareChat() {
+	r.chatCtx = r.ollama.NewChat(r.modelName, r.rule.ReviewerSystemMessage())
 }
 
 // review 评审专家生成的答案
 // 参数 question: 原始问题
 // 参数 answer: 专家生成的答案
 // 返回: ReviewResult，包含评分和评价文本
-func (this *Reviewer) review(question string, answer string) rule.ReviewResult {
+func (r *Reviewer) review(question string, answer string) rule.ReviewResult {
 	// 延迟初始化
-	if this.chatCtx == nil {
-		this.prepareChat()
+	if r.chatCtx == nil {
+		r.prepareChat()
 	}
 	// 构建评审提示词
-	message := this.rule.ReviewMessage(question, answer)
+	message := r.rule.ReviewMessage(question, answer)
 	// 调用 LLM 进行评审
-	review := this.ollama.NextChat(this.chatCtx, message)
+	review, err := r.ollama.NextChat(r.chatCtx, message)
+	if err != nil {
+		// 如果评审失败，返回空结果
+		r.logger.LogError(err, "review")
+		return rule.ReviewResult{}
+	}
 	// 解析评审结果（提取分数和评价）
-	return this.rule.ParseReview(review)
+	return r.rule.ParseReview(review)
 }

@@ -24,7 +24,7 @@ func newGseManager() *GseManager {
 // 将分词结果用空格连接，便于后续向量化处理
 // 参数 text: 待分词的中文文本
 // 返回: 分词后的文本（词语间用空格分隔）
-func (this *GseManager) splitChineseWords(text string) string {
-	cut := this.seg.Cut(text)
+func (g *GseManager) splitChineseWords(text string) string {
+	cut := g.seg.Cut(text)
 	return strings.Join(cut, " ")
 }

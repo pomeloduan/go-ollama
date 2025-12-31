@@ -17,9 +17,9 @@ type OllamaManager interface {
 	GetAvailableModelName(modelName string) string
 	GetDefaultEmbedModelName() string
 	GetDefaultLlmModelName() string
-	ChatWithoutContext(modelName string, message string) string
+	ChatWithoutContext(modelName string, message string) (string, error)
 	NewChat(modelName string, systemMessage string) *ChatContext
-	NextChat(chatCtx *ChatContext, message string) string
+	NextChat(chatCtx *ChatContext, message string) (string, error)
 	// 统计信息
 	GetTotalQCount() int
 	GetTotalACount() int
@@ -33,9 +33,10 @@ type ollamaManager struct {
 	models []string          // 可用的模型列表
 	logger logger.ErrorLogger // 日志记录器
 
-	autogenChatId int // 自动生成的对话 ID，用于区分不同的对话上下文
+	mu            sync.RWMutex // 保护并发访问的读写锁
+	autogenChatId int          // 自动生成的对话 ID，用于区分不同的对话上下文
 
-	// 数据统计
+	// 数据统计（需要并发保护）
 	totalQCount   int           // 总问题数
 	totalACount   int           // 总回答数
 	totalDuration time.Duration // 总响应时间
@@ -53,10 +54,11 @@ var (
 // 返回: ollamaManager 实例、error
 func newOllamaManager(domain string, logger logger.ErrorLogger) (*ollamaManager, error) {
 	// 1. 检查 Ollama 服务是否运行
-	_, err := http.Get(domain)
+	resp, err := http.Get(domain)
 	if err != nil {
-		return nil, fmt.Errorf("need ollama server")
+		return nil, fmt.Errorf("need ollama server: %w", err)
 	}
+	defer resp.Body.Close()
 
 	// 2. 列出可用模型
 	models, err := listModels(domain)
@@ -92,10 +94,10 @@ func StartOllamaManager(domain string, logger logger.ErrorLogger) (OllamaManager
 // 用于模糊匹配模型名称（如 "deepseek" 会匹配 "deepseek-chat"）
 // 参数 modelName: 模型名称关键词
 // 返回: 完整的模型名称，如果未找到则返回空字符串
-func (this *ollamaManager) GetAvailableModelName(modelName string) string {
-	for i := 0; i < len(this.models); i++ {
-		if strings.Contains(this.models[i], modelName) {
-			return this.models[i]
+func (o *ollamaManager) GetAvailableModelName(modelName string) string {
+	for i := 0; i < len(o.models); i++ {
+		if strings.Contains(o.models[i], modelName) {
+			return o.models[i]
 		}
 	}
 	return ""
@@ -103,44 +105,48 @@ func (this *ollamaManager) GetAvailableModelName(modelName string) string {
 
 // GetDefaultEmbedModelName 获取默认的嵌入模型名称
 // 用于文档向量化
-func (this *ollamaManager) GetDefaultEmbedModelName() string {
-	return this.GetAvailableModelName("embed")
+func (o *ollamaManager) GetDefaultEmbedModelName() string {
+	return o.GetAvailableModelName("embed")
 }
 
 // GetDefaultLlmModelName 获取默认的 LLM 模型名称
 // 用于文本生成
-func (this *ollamaManager) GetDefaultLlmModelName() string {
-	return this.GetAvailableModelName("deepseek")
+func (o *ollamaManager) GetDefaultLlmModelName() string {
+	return o.GetAvailableModelName("deepseek")
 }
 
 // ChatWithoutContext 单次对话，不维护上下文
 // 适用于不需要历史对话的场景（如协调者选择专家、重排序等）
 // 参数 modelName: 模型名称
 // 参数 message: 用户消息
-// 返回: LLM 生成的回答
-func (this *ollamaManager) ChatWithoutContext(modelName string, message string) string {
-	this.logger.LogInfo("q#: " + message)
-	this.totalQCount++
+// 返回: LLM 生成的回答、error
+func (o *ollamaManager) ChatWithoutContext(modelName string, message string) (string, error) {
+	o.logger.LogInfo("q#: " + message)
+	
+	o.mu.Lock()
+	o.totalQCount++
+	o.mu.Unlock()
 
 	start := time.Now()
-	response, err := sendChatRequest(this.domain, modelName, chatMessagesFromChatString(message))
+	response, err := sendChatRequest(o.domain, modelName, chatMessagesFromChatString(message))
 	if err != nil {
-		this.logger.LogError(fmt.Errorf("send chat err: %v", err), "sendchat")
-		return ""
+		o.logger.LogError(fmt.Errorf("send chat err: %v", err), "sendchat")
+		return "", fmt.Errorf("chat request failed: %w", err)
 	}
 
 	// 统计
 	elapsed := time.Since(start)
-
-	this.totalACount++
-	this.totalDuration += elapsed
-	this.totalToken += response.EvalCount
-
 	respMessage := response.Message
 
-	this.logger.LogInfo("a#: " + respMessage.Content)
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.totalACount++
+	o.totalDuration += elapsed
+	o.totalToken += response.EvalCount
 
-	return respMessage.Content
+	o.logger.LogInfo("a#: " + respMessage.Content)
+
+	return respMessage.Content, nil
 }
 
 // NewChat 创建新的对话上下文
@@ -148,9 +154,11 @@ func (this *ollamaManager) ChatWithoutContext(modelName string, message string) 
 // 参数 modelName: 模型名称
 // 参数 systemMessage: 系统提示词
 // 返回: ChatContext 实例
-func (this *ollamaManager) NewChat(modelName string, systemMessage string) *ChatContext {
-	var chatId = this.autogenChatId
-	this.autogenChatId++
+func (o *ollamaManager) NewChat(modelName string, systemMessage string) *ChatContext {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	chatId := o.autogenChatId
+	o.autogenChatId++
 
 	return newChat(modelName, chatId, systemMessage)
 }
@@ -159,55 +167,67 @@ func (this *ollamaManager) NewChat(modelName string, systemMessage string) *Chat
 // 将新的消息添加到历史记录，调用 LLM 生成回答，并保存回答到历史
 // 参数 chatCtx: 对话上下文
 // 参数 message: 用户消息
-// 返回: LLM 生成的回答
+// 返回: LLM 生成的回答、error
 // todo 上下文优化：实现有限上下文窗口，避免历史记录过长导致 token 超限
-func (this *ollamaManager) NextChat(chatCtx *ChatContext, message string) string {
-	this.logger.LogInfo("q" + strconv.Itoa(chatCtx.chatId) + ": " + message)
-	this.totalQCount++
+func (o *ollamaManager) NextChat(chatCtx *ChatContext, message string) (string, error) {
+	o.logger.LogInfo("q" + strconv.Itoa(chatCtx.chatId) + ": " + message)
+	
+	o.mu.Lock()
+	o.totalQCount++
+	o.mu.Unlock()
 
 	// 问题+历史记录
 	chatCtx.addChatString(message)
 
 	start := time.Now()
-	response, err := sendChatRequest(this.domain, chatCtx.modelName, chatCtx.getMessages())
+	response, err := sendChatRequest(o.domain, chatCtx.modelName, chatCtx.getMessages())
 	if err != nil {
-		this.logger.LogError(fmt.Errorf("send chat err: %v", err), "sendchat")
-		return ""
+		o.logger.LogError(fmt.Errorf("send chat err: %v", err), "sendchat")
+		return "", fmt.Errorf("chat request failed: %w", err)
 	}
 
 	// 统计
 	elapsed := time.Since(start)
-
-	this.totalACount++
-	this.totalDuration += elapsed
-	this.totalToken += response.EvalCount
-
 	respMessage := response.Message
 
-	this.logger.LogInfo("a" + strconv.Itoa(chatCtx.chatId) + ": " + respMessage.Content)
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.totalACount++
+	o.totalDuration += elapsed
+	o.totalToken += response.EvalCount
+
+	o.logger.LogInfo("a" + strconv.Itoa(chatCtx.chatId) + ": " + respMessage.Content)
 
 	// 保存历史记录
 	chatCtx.addMessage(respMessage)
 
-	return respMessage.Content
+	return respMessage.Content, nil
 }
 
 // GetTotalQCount 获取总问题数
-func (this *ollamaManager) GetTotalQCount() int {
-	return this.totalQCount
+func (o *ollamaManager) GetTotalQCount() int {
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+	return o.totalQCount
 }
 
 // GetTotalACount 获取总回答数
-func (this *ollamaManager) GetTotalACount() int {
-	return this.totalACount
+func (o *ollamaManager) GetTotalACount() int {
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+	return o.totalACount
 }
 
 // GetTotalDuration 获取总响应时间
-func (this *ollamaManager) GetTotalDuration() time.Duration {
-	return this.totalDuration
+func (o *ollamaManager) GetTotalDuration() time.Duration {
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+	return o.totalDuration
 }
 
 // GetTotalToken 获取总 token 使用量
-func (this *ollamaManager) GetTotalToken() int {
-	return this.totalToken
+func (o *ollamaManager) GetTotalToken() int {
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+	return o.totalToken
 }

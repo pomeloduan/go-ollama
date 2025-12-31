@@ -38,19 +38,19 @@ func newSpecialist(ollama ollama.OllamaManager, rag rag.RagManager, rule *rule.R
 // prepareChat 初始化对话环境
 // 如果需要 RAG，会预处理知识库（文本分块、向量化、存储）
 // 创建对话上下文，设置系统提示词
-func (this *Specialist) prepareChat() {
-	if this.rule.NeedRag() {
+func (s *Specialist) prepareChat() {
+	if s.rule.NeedRag() {
 		// 导入外部知识库，进行预处理
-		ragCtx, chProg, err := this.rag.PreprocessFromFile(this.rule.SourceFile())
+		ragCtx, chProg, err := s.rag.PreprocessFromFile(s.rule.SourceFile())
 		if err != nil {
-			this.logger.LogError(err, "rag preprocess")
+			s.logger.LogError(err, "rag preprocess")
 		} else {
-			this.ragCtx = ragCtx
+			s.ragCtx = ragCtx
 			fmt.Println("需要导入外部知识库，请稍等...")
 			errCount := 0
 			for p := range chProg {
 				if p.Err != nil {
-					this.logger.LogError(p.Err, "rag preprocess", p.Text)
+					s.logger.LogError(p.Err, "rag preprocess", p.Text)
 					errCount++
 				}
 				fmt.Printf("\r进度：%.1f%% 第%d项，共%d项", p.Percentage, p.Current, p.Total)
@@ -63,38 +63,42 @@ func (this *Specialist) prepareChat() {
 		}
 	}
 	// 创建对话上下文，设置系统提示词
-	this.chatCtx = this.ollama.NewChat(this.modelName, this.rule.SystemMessage())
+	s.chatCtx = s.ollama.NewChat(s.modelName, s.rule.SystemMessage())
 }
 
 // chat 处理用户问题并生成回答
 // 如果配置了 RAG，会先检索相关文档，然后将检索结果和问题一起发送给 LLM
 // 参数 chat: 用户输入的问题
-// 返回: 专家生成的回答
-func (this *Specialist) chat(chat string) string {
+// 返回: 专家生成的回答、error
+func (s *Specialist) chat(chat string) (string, error) {
 	// 延迟初始化，首次调用时准备对话环境
-	if this.chatCtx == nil {
-		this.prepareChat()
+	if s.chatCtx == nil {
+		s.prepareChat()
 	}
 	
 	// 如果需要 RAG，检索相关文档并增强问题
-	if this.rule.NeedRag() {
-		chSource, err := this.rag.Query(this.ragCtx, chat, this.rule)
+	if s.rule.NeedRag() {
+		if s.ragCtx == nil {
+			return "", fmt.Errorf("RAG context not initialized")
+		}
+		chSource, err := s.rag.Query(s.ragCtx, chat, s.rule)
 		if err != nil {
-			this.logger.LogError(err, "rag query")
+			s.logger.LogError(err, "rag query")
+			return "", fmt.Errorf("rag query failed: %w", err)
 		}
 		// 从 channel 中读取检索结果
 		source := ""
-		for s := range chSource {
-			source += s
+		for str := range chSource {
+			source += str
 		}
 		// 将检索到的文档和问题组合成新的提示词
-		chat = this.rule.SourceMessage(source, chat)
+		chat = s.rule.SourceMessage(source, chat)
 	}
 	// 调用 LLM 生成回答，维护对话上下文
-	return this.ollama.NextChat(this.chatCtx, chat)
+	return s.ollama.NextChat(s.chatCtx, chat)
 }
 
 // getRule 获取规则配置（供内部使用）
-func (this *Specialist) getRule() *rule.Rule {
-	return this.rule
+func (s *Specialist) getRule() *rule.Rule {
+	return s.rule
 }

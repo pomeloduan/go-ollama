@@ -28,8 +28,12 @@ func newReranker(ollama ollama.OllamaManager, rule rule.RuleManager) *Reranker {
 // 参数 candidates: 候选文档文本，多个文档用换行分隔
 // 参数 text: 用户问题
 // 参数 num: 返回的文档数量
-// 返回: 重排序后的文档文本
-func (this *Reranker) RankCandidate(candidates string, text string, num int) string {
-	message := this.rule.RerankMessage(candidates, text, num)
-	return this.ollama.ChatWithoutContext(this.modelName, message)
+// 返回: 重排序后的文档文本、error
+func (r *Reranker) RankCandidate(candidates string, text string, num int) (string, error) {
+	message := r.rule.RerankMessage(candidates, text, num)
+	result, err := r.ollama.ChatWithoutContext(r.modelName, message)
+	if err != nil {
+		return "", err
+	}
+	return result, nil
 }

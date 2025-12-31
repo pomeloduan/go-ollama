@@ -21,12 +21,13 @@ type ragManager struct {
 	gse      *GseManager     // 中文分词管理器
 	reranker Rerankable      // 重排序器接口
 
-	autogenRagId int // 自动生成的 RAG 上下文 ID
+	mu            sync.Mutex // 保护并发访问的互斥锁
+	autogenRagId  int        // 自动生成的 RAG 上下文 ID
 }
 
 // Rerankable 重排序器接口，用于对检索结果进行重排序
 type Rerankable interface {
-	RankCandidate(candidates string, text string, num int) string
+	RankCandidate(candidates string, text string, num int) (string, error)
 }
 
 // retrievalCount 向量检索返回的候选文档数量
@@ -80,16 +81,18 @@ type ProgressInfo struct {
 // 参数 filepath: 源文件路径
 // 返回: RagContext、ProgressInfo channel、error
 // 注意：ProgressInfo channel 需要调用者消费，否则会导致 goroutine 阻塞
-func (this *ragManager) PreprocessFromFile(filepath string) (*RagContext, chan ProgressInfo, error) {
-	var ragId = this.autogenRagId
-	this.autogenRagId++
+func (r *ragManager) PreprocessFromFile(filepath string) (*RagContext, chan ProgressInfo, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	ragId := r.autogenRagId
+	r.autogenRagId++
 
 	chunks, err := chunksFromTextFile(filepath)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = this.chromem.newCollection(ragId)
+	err = r.chromem.newCollection(ragId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -100,9 +103,9 @@ func (this *ragManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 		defer close(chProg)
 		for i := 0; i < len(chunks); i++ {
 			// 对中文文本进行分词，提升向量化效果
-			words := this.gse.splitChineseWords(chunks[i])
+			words := r.gse.splitChineseWords(chunks[i])
 			// 将文档添加到向量数据库（自动进行向量化）
-			err = this.chromem.addDocuments(ragId, i, words)
+			err = r.chromem.addDocuments(ragId, i, words)
 
 			percentage := float32(i+1) / float32(len(chunks)) * 100
 			// 发送进度信息
@@ -127,9 +130,9 @@ func (this *ragManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 // 参数 rule: 规则配置（当前未使用，保留用于扩展）
 // 返回: string channel、error
 // 注意：返回的 channel 需要调用者消费
-func (this *ragManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) (chan string, error) {
+func (r *ragManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) (chan string, error) {
 	// 1. 向量相似度召回：检索最相似的文档块索引
-	indexArr, err := this.chromem.query(ragCtx.ragId, text, retrievalCount)
+	indexArr, err := r.chromem.query(ragCtx.ragId, text, retrievalCount)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +154,12 @@ func (this *ragManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) 
 	chRes := make(chan string)
 	go func() {
 		defer close(chRes)
-		chRes <- this.reranker.RankCandidate(strings.Join(textArr, "\n"), text, rerankingCount)
+		result, err := r.reranker.RankCandidate(strings.Join(textArr, "\n"), text, rerankingCount)
+		if err != nil {
+			// 如果重排失败，返回空结果（调用者需要通过 channel 关闭来判断）
+			return
+		}
+		chRes <- result
 	}()
 	return chRes, nil
 }

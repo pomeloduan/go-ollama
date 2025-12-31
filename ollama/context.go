@@ -27,22 +27,22 @@ func chatMessagesFromChatString(content string) []ChatMessage {
 
 // addMessage 添加消息到对话历史
 // 参数 message: 要添加的消息（通常是助手的回答）
-func (this *ChatContext) addMessage(message ChatMessage) {
-	this.history = append(this.history, message)
+func (c *ChatContext) addMessage(message ChatMessage) {
+	c.history = append(c.history, message)
 }
 
 // addChatString 添加用户消息到对话历史
 // 参数 content: 用户消息内容
-func (this *ChatContext) addChatString(content string) {
-	this.history = append(this.history, ChatMessage{Role: "user", Content: content})
+func (c *ChatContext) addChatString(content string) {
+	c.history = append(c.history, ChatMessage{Role: "user", Content: content})
 }
 
 // getMessages 获取完整的消息列表，用于发送给 LLM
 // 格式：系统消息 + 对话历史
 // 返回: 消息数组，第一个是系统消息，后面是对话历史
-func (this *ChatContext) getMessages() []ChatMessage {
+func (c *ChatContext) getMessages() []ChatMessage {
 	messages := make([]ChatMessage, 1)
-	messages[0] = this.systemMessage
-	messages = append(messages, this.history...)
+	messages[0] = c.systemMessage
+	messages = append(messages, c.history...)
 	return messages
 }

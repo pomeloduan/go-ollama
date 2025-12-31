@@ -51,7 +51,7 @@ func StartErrorLogger(filename string) (ErrorLogger, error) {
 }
 
 // LogError 记录错误到文件
-func (this *errorLogger) LogError(err error, context ...string) error {
+func (e *errorLogger) LogError(err error, context ...string) error {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 
 	// 构建日志条目
@@ -68,16 +68,16 @@ func (this *errorLogger) LogError(err error, context ...string) error {
 	logEntry += "\n"
 
 	// 写入文件
-	if _, writeErr := this.file.WriteString(logEntry); writeErr != nil {
+	if _, writeErr := e.file.WriteString(logEntry); writeErr != nil {
 		return fmt.Errorf("写入日志失败: %v", writeErr)
 	}
 
 	// 确保立即写入磁盘
-	return this.file.Sync()
+	return e.file.Sync()
 }
 
 // LogInfo 记录信息到文件
-func (this *errorLogger) LogInfo(info string) error {
+func (e *errorLogger) LogInfo(info string) error {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 
 	// 构建日志条目
@@ -86,18 +86,18 @@ func (this *errorLogger) LogInfo(info string) error {
 	logEntry += "\n"
 
 	// 写入文件
-	if _, writeErr := this.file.WriteString(logEntry); writeErr != nil {
+	if _, writeErr := e.file.WriteString(logEntry); writeErr != nil {
 		return fmt.Errorf("写入日志失败: %v", writeErr)
 	}
 
 	// 确保立即写入磁盘
-	return this.file.Sync()
+	return e.file.Sync()
 }
 
 // Close 关闭日志文件
-func (this *errorLogger) Close() error {
-	if this.file != nil {
-		return this.file.Close()
+func (e *errorLogger) Close() error {
+	if e.file != nil {
+		return e.file.Close()
 	}
 	return nil
 }
