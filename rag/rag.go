@@ -4,14 +4,22 @@ import (
 	"go-ollama/rule"
 	"sort"
 	"strings"
+	"sync"
 )
 
-// RagManager RAG 管理器，负责检索增强生成的完整流程
+// RagManager RAG 管理器接口
+// 负责检索增强生成的完整流程
 // 包括文本预处理、向量检索和结果重排序
-type RagManager struct {
-	chromem  *ChromemManager // 向量数据库管理器
-	gse      *GseManager     // 中文分词管理器
-	reranker Rerankable      // 重排序器接口
+type RagManager interface {
+	PreprocessFromFile(filepath string) (*RagContext, chan ProgressInfo, error)
+	Query(ragCtx *RagContext, text string, rule *rule.Rule) (chan string, error)
+}
+
+// ragManager RAG 管理器实现（包私有）
+type ragManager struct {
+	chromem  chromemManager // 向量数据库管理器
+	gse      gseManager     // 中文分词管理器
+	reranker Rerankable     // 重排序器接口
 
 	autogenRagId int // 自动生成的 RAG 上下文 ID
 }
@@ -26,11 +34,27 @@ const retrievalCount = 10
 // rerankingCount 重排序后返回的最终文档数量
 const rerankingCount = 5
 
-func StartRag(reranker Rerankable) *RagManager {
-	chromem := startChromem()
-	gse := startGse()
-	ragManager := RagManager{chromem: chromem, gse: gse, reranker: reranker}
-	return &ragManager
+var (
+	ragInstance *ragManager
+	ragOnce     sync.Once
+)
+
+// newRagManager 创建并初始化 RAG 管理器实例
+// 参数 reranker: 重排序器接口
+// 返回: ragManager 实例
+func newRagManager(reranker Rerankable) *ragManager {
+	return &ragManager{
+		chromem:  newChromemManager(),
+		gse:      newGseManager(),
+		reranker: reranker,
+	}
+}
+
+func StartRagManager(reranker Rerankable) RagManager {
+	ragOnce.Do(func() {
+		ragInstance = newRagManager(reranker)
+	})
+	return ragInstance
 }
 
 // RAG 流程说明
@@ -55,7 +79,7 @@ type ProgressInfo struct {
 // 参数 filepath: 源文件路径
 // 返回: RagContext、ProgressInfo channel、error
 // 注意：ProgressInfo channel 需要调用者消费，否则会导致 goroutine 阻塞
-func (this *RagManager) PreprocessFromFile(filepath string) (*RagContext, chan ProgressInfo, error) {
+func (this *ragManager) PreprocessFromFile(filepath string) (*RagContext, chan ProgressInfo, error) {
 	var ragId = this.autogenRagId
 	this.autogenRagId++
 
@@ -64,7 +88,8 @@ func (this *RagManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 		return nil, nil, err
 	}
 
-	err = this.chromem.newCollection(ragId)
+	chromemPtr := &this.chromem
+	err = chromemPtr.newCollection(ragId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,9 +100,10 @@ func (this *RagManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 		defer close(chProg)
 		for i := 0; i < len(chunks); i++ {
 			// 对中文文本进行分词，提升向量化效果
-			words := this.gse.splitChineseWords(chunks[i])
+			gsePtr := &this.gse
+			words := gsePtr.splitChineseWords(chunks[i])
 			// 将文档添加到向量数据库（自动进行向量化）
-			err = this.chromem.addDocuments(ragId, i, words)
+			err = chromemPtr.addDocuments(ragId, i, words)
 
 			percentage := float32(i+1) / float32(len(chunks)) * 100
 			// 发送进度信息
@@ -102,9 +128,10 @@ func (this *RagManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 // 参数 rule: 规则配置（当前未使用，保留用于扩展）
 // 返回: string channel、error
 // 注意：返回的 channel 需要调用者消费
-func (this *RagManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) (chan string, error) {
+func (this *ragManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) (chan string, error) {
 	// 1. 向量相似度召回：检索最相似的文档块索引
-	indexArr, err := this.chromem.query(ragCtx.ragId, text, retrievalCount)
+	chromemPtr := &this.chromem
+	indexArr, err := chromemPtr.query(ragCtx.ragId, text, retrievalCount)
 	if err != nil {
 		return nil, err
 	}

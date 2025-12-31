@@ -12,19 +12,19 @@ import (
 // Specialist 专家 Agent，负责处理特定领域的问题
 // 支持 RAG（检索增强生成）来提升回答的准确性
 type Specialist struct {
-	ollama    *ollama.OllamaManager // Ollama 管理器
-	rag       *rag.RagManager       // RAG 管理器，用于检索外部知识
-	modelName string                // 使用的 LLM 模型名称
-	rule      *rule.Rule            // 规则配置
-	chatCtx   *ollama.ChatContext   // 对话上下文，维护多轮对话历史
-	ragCtx    *rag.RagContext       // RAG 上下文，存储知识库信息
-	logger    *logger.ErrorLogger   // 日志记录器
+	ollama    ollama.OllamaManager // Ollama 管理器
+	rag       rag.RagManager       // RAG 管理器，用于检索外部知识
+	modelName string               // 使用的 LLM 模型名称
+	rule      *rule.Rule           // 规则配置
+	chatCtx   *ollama.ChatContext  // 对话上下文，维护多轮对话历史
+	ragCtx    *rag.RagContext     // RAG 上下文，存储知识库信息
+	logger    logger.ErrorLogger  // 日志记录器
 }
 
-// startSpecialist 创建并初始化专家实例
+// newSpecialist 创建并初始化专家实例
 // 参数 rag: RAG 管理器
 // 参数 rule: 专家规则配置
-func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule *rule.Rule, logger *logger.ErrorLogger) *Specialist {
+func newSpecialist(ollama ollama.OllamaManager, rag rag.RagManager, rule *rule.Rule, logger logger.ErrorLogger) *Specialist {
 	specialist := Specialist{
 		ollama:    ollama,
 		rag:       rag,
@@ -92,4 +92,9 @@ func (this *Specialist) chat(chat string) string {
 	}
 	// 调用 LLM 生成回答，维护对话上下文
 	return this.ollama.NextChat(this.chatCtx, chat)
+}
+
+// getRule 获取规则配置（供内部使用）
+func (this *Specialist) getRule() *rule.Rule {
+	return this.rule
 }

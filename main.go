@@ -22,14 +22,14 @@ func main() {
 	fmt.Println("--> Ollama Local Service Demo")
 
 	// 创建错误日志
-	logger, err := logger.NewErrorLogger("info.log")
+	logger, err := logger.StartErrorLogger("info.log")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer logger.Close()
 
 	// 连接本地模型
-	ollama, err := ollama.StartOllama(ollamaDomain, logger)
+	ollama, err := ollama.StartOllamaManager(ollamaDomain, logger)
 	if err != nil {
 		logger.LogError(err, "launching")
 		return
@@ -44,14 +44,14 @@ func main() {
 	// 提问 / 回答
 	processInput(agent, logger)
 
-	fmt.Println("提问：", ollama.TotalQCount)
-	fmt.Println("回答：", ollama.TotalACount)
-	fmt.Printf("总用时：%f\n", ollama.TotalDuration.Seconds())
-	fmt.Println("token使用：", ollama.TotalToken)
+	fmt.Println("提问：", ollama.GetTotalQCount())
+	fmt.Println("回答：", ollama.GetTotalACount())
+	fmt.Printf("总用时：%f\n", ollama.GetTotalDuration().Seconds())
+	fmt.Println("token使用：", ollama.GetTotalToken())
 }
 
 // 处理用户输入
-func processInput(agent *agent.AgentManager, logger *logger.ErrorLogger) {
+func processInput(agent agent.AgentManager, logger logger.ErrorLogger) {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Println("等待提问 -->")

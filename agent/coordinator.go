@@ -7,14 +7,14 @@ import (
 
 // Coordinator 协调者，负责分析问题并选择最合适的专家 Agent
 type Coordinator struct {
-	ollama        *ollama.OllamaManager // Ollama 管理器，用于调用 LLM
-	modelName     string                // 使用的模型名称
-	specialistMap map[string]string     // 专家名称到介绍的映射
-	rule          *rule.RuleManager     // 规则管理器
+	ollama        ollama.OllamaManager // Ollama 管理器，用于调用 LLM
+	modelName     string               // 使用的模型名称
+	specialistMap map[string]string    // 专家名称到介绍的映射
+	rule          rule.RuleManager     // 规则管理器
 }
 
-// startCoordinator 创建并初始化协调者实例
-func startCoordinator(ollama *ollama.OllamaManager, rule *rule.RuleManager) *Coordinator {
+// newCoordinator 创建并初始化协调者实例
+func newCoordinator(ollama ollama.OllamaManager, rule rule.RuleManager) *Coordinator {
 	coordinator := Coordinator{
 		ollama:        ollama,
 		modelName:     ollama.GetAvailableModelName("deepseek"),

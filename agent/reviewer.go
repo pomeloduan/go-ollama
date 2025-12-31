@@ -9,15 +9,15 @@ import (
 // Reviewer 评审者 Agent，负责评估专家生成答案的质量
 // 通过评分和评价来指导答案的改进
 type Reviewer struct {
-	ollama    *ollama.OllamaManager // Ollama 管理器
-	modelName string                // 使用的模型名称
-	rule      *rule.Rule            // 规则配置，包含评审相关的提示词
-	chatCtx   *ollama.ChatContext   // 对话上下文
-	logger    *logger.ErrorLogger   // 日志记录器
+	ollama    ollama.OllamaManager // Ollama 管理器
+	modelName string               // 使用的模型名称
+	rule      *rule.Rule          // 规则配置，包含评审相关的提示词
+	chatCtx   *ollama.ChatContext // 对话上下文
+	logger    logger.ErrorLogger  // 日志记录器
 }
 
-// startReviewer 创建并初始化评审者实例
-func startReviewer(ollama *ollama.OllamaManager, rule *rule.Rule, logger *logger.ErrorLogger) *Reviewer {
+// newReviewer 创建并初始化评审者实例
+func newReviewer(ollama ollama.OllamaManager, rule *rule.Rule, logger logger.ErrorLogger) *Reviewer {
 	reviewer := Reviewer{
 		ollama:    ollama,
 		modelName: ollama.GetAvailableModelName("gemma"),

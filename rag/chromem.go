@@ -3,23 +3,28 @@ package rag
 import (
 	"context"
 	"strconv"
+	"sync"
 
 	"github.com/philippgille/chromem-go"
 )
 
-// ChromemManager 向量数据库管理器
+// ChromemManager  向量数据库管理器
 // 使用 Chromem 库管理向量集合，支持文档的向量化和相似度检索
 type ChromemManager struct {
-	db            *chromem.DB                      // Chromem 数据库实例
-	collectionMap map[int]*chromem.Collection      // RAG ID 到向量集合的映射
+	db            *chromem.DB                 // Chromem 数据库实例
+	collectionMap map[int]*chromem.Collection // RAG ID 到向量集合的映射
 }
 
 // ollamaEmbedModelName Ollama 嵌入模型名称，用于文档向量化
 const ollamaEmbedModelName = "nomic-embed-text-v2-moe"
 
-// startChromem 创建并初始化向量数据库管理器
-func startChromem() *ChromemManager {
-	return &ChromemManager{db: chromem.NewDB(), collectionMap: make(map[int]*chromem.Collection)}
+
+// newChromemManager 创建并初始化向量数据库管理器
+func newChromemManager() *ChromemManager {
+	return &ChromemManager{
+		db:            chromem.NewDB(),
+		collectionMap: make(map[int]*chromem.Collection),
+	}
 }
 
 // newCollection 为指定的 RAG 上下文创建新的向量集合

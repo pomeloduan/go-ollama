@@ -3,19 +3,34 @@ package rule
 import (
 	"strconv"
 	"strings"
+	"sync"
 )
 
-// RuleManager 规则管理器
+// RuleManager 规则管理器接口
 // 负责读取和解析 YAML 配置文件，管理所有 专家/评审者 Agent 的规则配置
-type RuleManager struct {
+type RuleManager interface {
+	GetGeneralRule() *Rule
+	GetAllRules() []*Rule
+	RerankMessage(candidates string, question string, number int) string
+	CoordinatorMessage(question string) string
+	CoordinatorSpecialistMessage(name string, introduction string) string
+}
+
+// ruleManager 规则管理器实现（包私有）
+type ruleManager struct {
 	ruleMap map[string]*Rule // 规则名称到规则对象的映射
 	config  *ChatConfig      // 完整配置对象
 }
 
-// StartRuleManager 启动规则管理器
-// 从配置文件读取规则，创建规则对象
-// 返回: RuleManager 实例、error
-func StartRuleManager() (*RuleManager, error) {
+var (
+	ruleInstance *ruleManager
+	ruleOnce     sync.Once
+	ruleInitErr  error
+)
+
+// newRuleManager 创建并初始化规则管理器实例
+// 返回: ruleManager 实例、error
+func newRuleManager() (*ruleManager, error) {
 	// read file
 	config, err := readConfig("./rule/config.yml")
 	if err != nil {
@@ -26,18 +41,32 @@ func StartRuleManager() (*RuleManager, error) {
 	for name, ruleCfg := range config.Rules {
 		ruleMap[name] = &Rule{name: name, config: &ruleCfg}
 	}
-	return &RuleManager{ruleMap: ruleMap, config: config}, nil
+	return &ruleManager{ruleMap: ruleMap, config: config}, nil
+}
+
+// StartRuleManager 获取规则管理器单例
+// 从配置文件读取规则，创建规则对象
+// 返回: RuleManager 实例、error
+func StartRuleManager() (RuleManager, error) {
+	ruleOnce.Do(func() {
+		ruleInstance, err = newRuleManager()
+	})
+	
+	if err != nil {
+		return nil, err
+	}
+	return ruleInstance, nil
 }
 
 // GetGeneralRule 获取通用规则（用于通用专家）
 // 返回一个空的 Rule 对象，表示没有特定配置
-func (this *RuleManager) GetGeneralRule() *Rule {
+func (this *ruleManager) GetGeneralRule() *Rule {
 	return &Rule{}
 }
 
 // GetAllRules 获取所有规则对象
 // 返回: 规则对象数组
-func (this *RuleManager) GetAllRules() []*Rule {
+func (this *ruleManager) GetAllRules() []*Rule {
 	var rules []*Rule
 	for _, r := range this.ruleMap {
 		rules = append(rules, r)
@@ -47,7 +76,7 @@ func (this *RuleManager) GetAllRules() []*Rule {
 
 // RerankMessage 构建重排序提示词
 // 替换模板中的占位符（{question}, {number}, {candidates}）
-func (this *RuleManager) RerankMessage(candidates string, question string, number int) string {
+func (this *ruleManager) RerankMessage(candidates string, question string, number int) string {
 	replacer := strings.NewReplacer(
 		"{question}", question,
 		"{number}", strconv.Itoa(number),
@@ -58,7 +87,7 @@ func (this *RuleManager) RerankMessage(candidates string, question string, numbe
 
 // CoordinatorMessage 构建协调者提示词
 // 替换模板中的占位符（{question}）
-func (this *RuleManager) CoordinatorMessage(question string) string {
+func (this *ruleManager) CoordinatorMessage(question string) string {
 	replacer := strings.NewReplacer(
 		"{question}", question,
 	)
@@ -67,7 +96,7 @@ func (this *RuleManager) CoordinatorMessage(question string) string {
 
 // CoordinatorSpecialistMessage 构建协调者专家信息提示词
 // 替换模板中的占位符（{name}, {introduction}）
-func (this *RuleManager) CoordinatorSpecialistMessage(name string, introduction string) string {
+func (this *ruleManager) CoordinatorSpecialistMessage(name string, introduction string) string {
 	replacer := strings.NewReplacer(
 		"{name}", name,
 		"{introduction}", introduction,
