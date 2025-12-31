@@ -5,7 +5,13 @@ import (
 	"strings"
 )
 
-// 解析格式 "key0:text0 key1:text1" 的字符串
+// parseKeyValueText 解析键值对格式的文本
+// 从文本中提取两个键对应的值
+// 格式示例："score: 75 review: 这是一段评价"
+// 参数 input: 输入文本
+// 参数 key0: 第一个键名
+// 参数 key1: 第二个键名
+// 返回: key0 的值、key1 的值、是否解析成功
 func parseKeyValueText(input, key0, key1 string) (string, string, bool) {
 	pKey0 := strings.Index(input, key0+":")
 	if pKey0 == -1 {
@@ -23,7 +29,10 @@ func parseKeyValueText(input, key0, key1 string) (string, string, bool) {
 	return text0, text1, true
 }
 
-// 压缩空行
+// compactEmptyLines 压缩文本中的连续空行
+// 将多个连续的空行压缩为一个，并去除首尾的换行符
+// 参数 input: 输入文本
+// 返回: 处理后的文本
 func compactEmptyLines(input string) string {
 	re := regexp.MustCompile(`\n\s*\n`)
 

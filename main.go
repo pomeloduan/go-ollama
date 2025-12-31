@@ -12,8 +12,11 @@ import (
 	"go-ollama/ollama"
 )
 
+// ollamaDomain Ollama 服务的地址，默认本地 11434 端口
 const ollamaDomain = "http://localhost:11434"
 
+// main 程序入口函数
+// 初始化日志、Ollama 连接和 Agent 管理器，然后进入交互式问答循环
 // todo mcp func call
 func main() {
 	fmt.Println("--> Ollama Local Service Demo")
@@ -25,21 +28,18 @@ func main() {
 	}
 	defer logger.Close()
 
-	// rule := getMathRule()
-
+	// 连接本地模型
 	ollama, err := ollama.StartOllama(ollamaDomain, logger)
 	if err != nil {
-		logger.LogError(err, "lauching")
+		logger.LogError(err, "launching")
 		return
 	}
-
+	// 启动agent
 	agent, err := agent.StartAgentManager(ollama, logger)
 	if err != nil {
-		logger.LogError(err, "lauching")
+		logger.LogError(err, "launching")
 		return
 	}
-
-	// chatId := newChat(ollama, rule, logger)
 
 	// 提问 / 回答
 	processInput(agent, logger)
