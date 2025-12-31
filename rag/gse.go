@@ -2,7 +2,6 @@ package rag
 
 import (
 	"strings"
-	"sync"
 
 	"github.com/go-ego/gse"
 )
