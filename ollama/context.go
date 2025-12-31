@@ -11,10 +11,10 @@ type ChatContext struct {
 // newChat 创建新的对话上下文
 // 参数 modelName: 模型名称
 // 参数 chatId: 对话 ID
-// 参数 systemMesssage: 系统提示词
+// 参数 systemMessage: 系统提示词
 // 返回: ChatContext 实例
-func newChat(modelName string, chatId int, systemMesssage string) *ChatContext {
-	return &ChatContext{modelName: modelName, chatId: chatId, systemMessage: ChatMessage{Role: "system", Content: systemMesssage}}
+func newChat(modelName string, chatId int, systemMessage string) *ChatContext {
+	return &ChatContext{modelName: modelName, chatId: chatId, systemMessage: ChatMessage{Role: "system", Content: systemMessage}}
 }
 
 // chatMessagesFromChatString 将字符串转换为单次对话的消息数组
@@ -26,9 +26,9 @@ func chatMessagesFromChatString(content string) []ChatMessage {
 }
 
 // addMessage 添加消息到对话历史
-// 参数 messsage: 要添加的消息（通常是助手的回答）
-func (this *ChatContext) addMessage(messsage ChatMessage) {
-	this.history = append(this.history, messsage)
+// 参数 message: 要添加的消息（通常是助手的回答）
+func (this *ChatContext) addMessage(message ChatMessage) {
+	this.history = append(this.history, message)
 }
 
 // addChatString 添加用户消息到对话历史

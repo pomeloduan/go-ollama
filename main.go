@@ -31,13 +31,13 @@ func main() {
 	// 连接本地模型
 	ollama, err := ollama.StartOllama(ollamaDomain, logger)
 	if err != nil {
-		logger.LogError(err, "lauching")
+		logger.LogError(err, "launching")
 		return
 	}
 	// 启动agent
 	agent, err := agent.StartAgentManager(ollama, logger)
 	if err != nil {
-		logger.LogError(err, "lauching")
+		logger.LogError(err, "launching")
 		return
 	}
 

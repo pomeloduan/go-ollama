@@ -59,7 +59,7 @@ func (this *RagManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 	var ragId = this.autogenRagId
 	this.autogenRagId++
 
-	chucks, err := chucksFromTextFile(filepath)
+	chunks, err := chunksFromTextFile(filepath)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -73,25 +73,25 @@ func (this *RagManager) PreprocessFromFile(filepath string) (*RagContext, chan P
 	chProg := make(chan ProgressInfo)
 	go func() {
 		defer close(chProg)
-		for i := 0; i < len(chucks); i++ {
+		for i := 0; i < len(chunks); i++ {
 			// 对中文文本进行分词，提升向量化效果
-			words := this.gse.splitChineseWords(chucks[i])
+			words := this.gse.splitChineseWords(chunks[i])
 			// 将文档添加到向量数据库（自动进行向量化）
 			err = this.chromem.addDocuments(ragId, i, words)
 
-			percentage := float32(i+1) / float32(len(chucks)) * 100
+			percentage := float32(i+1) / float32(len(chunks)) * 100
 			// 发送进度信息
 			chProg <- ProgressInfo{
 				Current:    i + 1,
-				Total:      len(chucks),
+				Total:      len(chunks),
 				Percentage: percentage,
 				Err:        err,
-				Text:       chucks[i],
+				Text:       chunks[i],
 			}
 		}
 	}()
 
-	ragCtx := RagContext{ragId: ragId, chucks: chucks}
+	ragCtx := RagContext{ragId: ragId, chunks: chunks}
 	return &ragCtx, chProg, nil
 }
 
@@ -117,9 +117,9 @@ func (this *RagManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) 
 		index := indexArr[i]
 		// 如果当前块和前一个块只间隔一个块，将中间块也加入，保证上下文完整
 		if i > 0 && index-indexArr[i-1] == 2 {
-			textArr = append(textArr, ragCtx.chucks[index-1])
+			textArr = append(textArr, ragCtx.chunks[index-1])
 		}
-		textArr = append(textArr, ragCtx.chucks[index])
+		textArr = append(textArr, ragCtx.chunks[index])
 	}
 	
 	// 3. 使用 LLM 对候选文档进行重排，选择最相关的文档

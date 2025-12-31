@@ -183,9 +183,9 @@ func (this *Rule) RewriteMessage(review string) string {
 // 参数 text: LLM 返回的评审文本
 // 返回: ReviewResult
 func (this *Rule) ParseReview(text string) ReviewResult {
-	var scoreString, review, isFormated = parseKeyValueText(text, "score", "review")
+	var scoreString, review, isFormatted = parseKeyValueText(text, "score", "review")
 	score, _ := strconv.Atoi(scoreString)
-	if isFormated {
+	if isFormatted {
 		return ReviewResult{Score: score, Review: compactEmptyLines(review)}
 	} else {
 		return ReviewResult{}

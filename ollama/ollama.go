@@ -107,13 +107,13 @@ func (this *OllamaManager) ChatWithoutContext(modelName string, message string) 
 // NewChat 创建新的对话上下文
 // 为每个 Agent 创建独立的对话上下文，用于维护多轮对话历史
 // 参数 modelName: 模型名称
-// 参数 systemMesssage: 系统提示词
+// 参数 systemMessage: 系统提示词
 // 返回: ChatContext 实例
-func (this *OllamaManager) NewChat(modelName string, systemMesssage string) *ChatContext {
+func (this *OllamaManager) NewChat(modelName string, systemMessage string) *ChatContext {
 	var chatId = this.autogenChatId
 	this.autogenChatId++
 
-	return newChat(modelName, chatId, systemMesssage)
+	return newChat(modelName, chatId, systemMessage)
 }
 
 // NextChat 继续进行对话，维护上下文
