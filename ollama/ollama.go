@@ -59,6 +59,7 @@ func (this *OllamaManager) GetDefaultLlmModelName() string {
 	return this.GetAvailableModelName("deepseek")
 }
 
+// 无需上下文的对话（单次对话）
 func (this *OllamaManager) ChatWithoutContext(modelName string, message string) string {
 	this.logger.LogInfo("q#: " + message)
 	this.TotalQCount++

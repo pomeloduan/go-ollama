@@ -25,21 +25,18 @@ func main() {
 	}
 	defer logger.Close()
 
-	// rule := getMathRule()
-
+	// 连接本地模型
 	ollama, err := ollama.StartOllama(ollamaDomain, logger)
 	if err != nil {
 		logger.LogError(err, "lauching")
 		return
 	}
-
+	// 启动agent
 	agent, err := agent.StartAgentManager(ollama, logger)
 	if err != nil {
 		logger.LogError(err, "lauching")
 		return
 	}
-
-	// chatId := newChat(ollama, rule, logger)
 
 	// 提问 / 回答
 	processInput(agent, logger)

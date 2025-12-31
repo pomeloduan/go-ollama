@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// 规则配置
 type RuleManager struct {
 	ruleMap map[string]*Rule
 	config  *ChatConfig
@@ -36,7 +37,7 @@ func (this *RuleManager) GetAllRules() []*Rule {
 	return rules
 }
 
-func (this *RuleManager) RerankMessage(question string, number int, candidates string) string {
+func (this *RuleManager) RerankMessage(candidates string, question string, number int) string {
 	replacer := strings.NewReplacer(
 		"{question}", question,
 		"{number}", strconv.Itoa(number),

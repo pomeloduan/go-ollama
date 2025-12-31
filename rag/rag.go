@@ -98,7 +98,7 @@ func (this *RagManager) Query(ragCtx *RagContext, text string, rule *rule.Rule) 
 		}
 		textArr = append(textArr, ragCtx.chucks[index])
 	}
-	// 重排 rank agent
+	// 重排 rerank agent
 	chRes := make(chan string)
 	go func() {
 		defer close(chRes)

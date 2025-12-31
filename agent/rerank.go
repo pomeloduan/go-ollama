@@ -5,6 +5,7 @@ import (
 	"go-ollama/rule"
 )
 
+// 重排
 type Reranker struct {
 	ollama    *ollama.OllamaManager
 	modelName string
@@ -20,7 +21,8 @@ func startReranker(ollama *ollama.OllamaManager, rule *rule.RuleManager) *Rerank
 	return &reranker
 }
 
+// 调用LLM对比候选资料和特定文本
 func (this *Reranker) RankCandidate(candidates string, text string, num int) string {
-	message := this.rule.RerankMessage(text, num, candidates)
+	message := this.rule.RerankMessage(candidates, text, num)
 	return this.ollama.ChatWithoutContext(this.modelName, message)
 }

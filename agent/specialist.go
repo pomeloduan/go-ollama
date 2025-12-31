@@ -9,6 +9,7 @@ import (
 	"strconv"
 )
 
+// 专家
 type Specialist struct {
 	ollama    *ollama.OllamaManager
 	rag       *rag.RagManager
@@ -32,6 +33,7 @@ func startSpecialist(ollama *ollama.OllamaManager, rag *rag.RagManager, rule *ru
 
 func (this *Specialist) prepareChat() {
 	if this.rule.NeedRag() {
+		// 导入外部知识
 		ragCtx, chProg, err := this.rag.PreprocessFromFile(this.rule.SourceFile())
 		if err != nil {
 			this.logger.LogError(err, "rag preprocess")

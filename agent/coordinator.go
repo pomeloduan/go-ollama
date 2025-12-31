@@ -5,6 +5,7 @@ import (
 	"go-ollama/rule"
 )
 
+// 协调者
 type Coordinator struct {
 	ollama        *ollama.OllamaManager
 	modelName     string
@@ -22,11 +23,13 @@ func startCoordinator(ollama *ollama.OllamaManager, rule *rule.RuleManager) *Coo
 	return &coordinator
 }
 
+// 添加专家的名称/介绍
 func (this *Coordinator) addSpecialist(name string, introduction string) {
 	this.specialistMap[name] = introduction
 }
 
-func (this *Coordinator) askForSpecialist(chat string) string {
+// 协调者选择主题相关的专家回答问题
+func (this *Coordinator) askForSpecialistName(chat string) string {
 	message := this.rule.CoordinatorMessage(chat)
 	for name, introduction := range this.specialistMap {
 		message += this.rule.CoordinatorSpecialistMessage(name, introduction)
