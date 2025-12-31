@@ -32,7 +32,6 @@ const rewriteScore = 80
 var (
 	agentInstance *agentManager
 	agentOnce     sync.Once
-	agentInitErr  error
 )
 
 // newAgentManager 创建并初始化 Agent 管理器实例
@@ -88,6 +87,7 @@ func newAgentManager(ollama ollama.OllamaManager, logger logger.ErrorLogger) (*a
 // rag工程化
 // function call
 func StartAgentManager(ollama ollama.OllamaManager, logger logger.ErrorLogger) (AgentManager, error) {
+	var err error
 	agentOnce.Do(func() {
 		agentInstance, err = newAgentManager(ollama, logger)
 	})

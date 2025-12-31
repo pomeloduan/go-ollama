@@ -22,7 +22,6 @@ type errorLogger struct {
 var (
 	loggerInstance *errorLogger
 	loggerOnce     sync.Once
-	loggerInitErr  error
 )
 
 // newErrorLogger 创建并初始化错误日志记录器实例
@@ -40,6 +39,7 @@ func newErrorLogger(filename string) (*errorLogger, error) {
 
 // StartErrorLogger 获取错误日志记录器单例
 func StartErrorLogger(filename string) (ErrorLogger, error) {
+	var err error
 	loggerOnce.Do(func() {
 		loggerInstance, err = newErrorLogger(filename)
 	})
