@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,11 +28,23 @@ var (
 	ruleOnce     sync.Once
 )
 
+// getConfigPath 获取配置文件路径
+// 优先使用环境变量 RULE_CONFIG_PATH，如果未设置则使用默认路径
+// 返回: 配置文件路径
+func getConfigPath() string {
+	configPath := os.Getenv("RULE_CONFIG_PATH")
+	if configPath == "" {
+		configPath = "./rule/config.yml" // 默认路径
+	}
+	return configPath
+}
+
 // newRuleManager 创建并初始化规则管理器实例
 // 返回: ruleManager 实例、error
 func newRuleManager() (*ruleManager, error) {
 	// read file
-	config, err := readConfig("./rule/config.yml")
+	configPath := getConfigPath()
+	config, err := readConfig(configPath)
 	if err != nil {
 		return nil, err
 	}
