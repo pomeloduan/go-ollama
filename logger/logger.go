@@ -3,7 +3,6 @@ package logger
 import (
 	"fmt"
 	"os"
-	"sync"
 	"time"
 )
 
@@ -19,15 +18,10 @@ type errorLogger struct {
 	file *os.File
 }
 
-var (
-	loggerInstance *errorLogger
-	loggerOnce     sync.Once
-)
-
-// newErrorLogger 创建并初始化错误日志记录器实例
+// NewErrorLogger 创建并初始化错误日志记录器
 // 参数 filename: 日志文件路径
 // 返回: errorLogger 实例、error
-func newErrorLogger(filename string) (*errorLogger, error) {
+func NewErrorLogger(filename string) (ErrorLogger, error) {
 	// 打开或创建日志文件（追加模式）
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -35,19 +29,6 @@ func newErrorLogger(filename string) (*errorLogger, error) {
 	}
 
 	return &errorLogger{file: file}, nil
-}
-
-// StartErrorLogger 获取错误日志记录器单例
-func StartErrorLogger(filename string) (ErrorLogger, error) {
-	var err error
-	loggerOnce.Do(func() {
-		loggerInstance, err = newErrorLogger(filename)
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	return loggerInstance, nil
 }
 
 // LogError 记录错误到文件
