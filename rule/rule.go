@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,11 +28,23 @@ var (
 	ruleOnce     sync.Once
 )
 
+// getConfigPath 获取配置文件路径
+// 优先使用环境变量 RULE_CONFIG_PATH，如果未设置则使用默认路径
+// 返回: 配置文件路径
+func getConfigPath() string {
+	configPath := os.Getenv("RULE_CONFIG_PATH")
+	if configPath == "" {
+		configPath = "./rule/config.yml" // 默认路径
+	}
+	return configPath
+}
+
 // newRuleManager 创建并初始化规则管理器实例
 // 返回: ruleManager 实例、error
 func newRuleManager() (*ruleManager, error) {
 	// read file
-	config, err := readConfig("./rule/config.yml")
+	configPath := getConfigPath()
+	config, err := readConfig(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -60,48 +73,48 @@ func StartRuleManager() (RuleManager, error) {
 
 // GetGeneralRule 获取通用规则（用于通用专家）
 // 返回一个空的 Rule 对象，表示没有特定配置
-func (this *ruleManager) GetGeneralRule() *Rule {
+func (r *ruleManager) GetGeneralRule() *Rule {
 	return &Rule{}
 }
 
 // GetAllRules 获取所有规则对象
 // 返回: 规则对象数组
-func (this *ruleManager) GetAllRules() []*Rule {
+func (r *ruleManager) GetAllRules() []*Rule {
 	var rules []*Rule
-	for _, r := range this.ruleMap {
-		rules = append(rules, r)
+	for _, rule := range r.ruleMap {
+		rules = append(rules, rule)
 	}
 	return rules
 }
 
 // RerankMessage 构建重排序提示词
 // 替换模板中的占位符（{question}, {number}, {candidates}）
-func (this *ruleManager) RerankMessage(candidates string, question string, number int) string {
+func (r *ruleManager) RerankMessage(candidates string, question string, number int) string {
 	replacer := strings.NewReplacer(
 		"{question}", question,
 		"{number}", strconv.Itoa(number),
 		"{candidates}", candidates,
 	)
-	return replacer.Replace(this.config.RerankMessage)
+	return replacer.Replace(r.config.RerankMessage)
 }
 
 // CoordinatorMessage 构建协调者提示词
 // 替换模板中的占位符（{question}）
-func (this *ruleManager) CoordinatorMessage(question string) string {
+func (r *ruleManager) CoordinatorMessage(question string) string {
 	replacer := strings.NewReplacer(
 		"{question}", question,
 	)
-	return replacer.Replace(this.config.CoordinatorMessage)
+	return replacer.Replace(r.config.CoordinatorMessage)
 }
 
 // CoordinatorSpecialistMessage 构建协调者专家信息提示词
 // 替换模板中的占位符（{name}, {introduction}）
-func (this *ruleManager) CoordinatorSpecialistMessage(name string, introduction string) string {
+func (r *ruleManager) CoordinatorSpecialistMessage(name string, introduction string) string {
 	replacer := strings.NewReplacer(
 		"{name}", name,
 		"{introduction}", introduction,
 	)
-	return replacer.Replace(this.config.CoordinatorSpecialistMessage)
+	return replacer.Replace(r.config.CoordinatorSpecialistMessage)
 }
 
 // Rule 单个规则配置
@@ -112,98 +125,98 @@ type Rule struct {
 }
 
 // Name 获取规则名称
-func (this *Rule) Name() string {
-	return this.name
+func (r *Rule) Name() string {
+	return r.name
 }
 
 // Introduction 获取专家介绍
 // 用于协调者匹配问题
-func (this *Rule) Introduction() string {
-	if this.config == nil {
+func (r *Rule) Introduction() string {
+	if r.config == nil {
 		return ""
 	}
-	return this.config.Introduction
+	return r.config.Introduction
 }
 
 // SystemMessage 获取系统提示词
 // 定义 Agent 的角色和行为
-func (this *Rule) SystemMessage() string {
-	if this.config == nil {
+func (r *Rule) SystemMessage() string {
+	if r.config == nil {
 		return ""
 	}
-	return this.config.SystemMessage
+	return r.config.SystemMessage
 }
 
 // NeedRag 判断是否需要 RAG
 // 如果配置了源文件，则需要 RAG
-func (this *Rule) NeedRag() bool {
-	if this.config == nil {
+func (r *Rule) NeedRag() bool {
+	if r.config == nil {
 		return false
 	}
-	return this.SourceFile() != ""
+	return r.SourceFile() != ""
 }
 
 // SourceFile 获取 RAG 源文件路径
-func (this *Rule) SourceFile() string {
-	if this.config == nil {
+func (r *Rule) SourceFile() string {
+	if r.config == nil {
 		return ""
 	}
-	return this.config.SourceFile
+	return r.config.SourceFile
 }
 
 // SourceMessage 构建包含检索文档的提示词
 // 将检索到的文档和问题组合，替换模板中的占位符（{source}, {question}）
-func (this *Rule) SourceMessage(source string, question string) string {
-	if this.config == nil {
+func (r *Rule) SourceMessage(source string, question string) string {
+	if r.config == nil {
 		return ""
 	}
 	replacer := strings.NewReplacer(
 		"{source}", source,
 		"{question}", question,
 	)
-	return replacer.Replace(this.config.SourceMessage)
+	return replacer.Replace(r.config.SourceMessage)
 }
 
 // NeedReviewer 判断是否需要评审者
 // 如果配置了评审者系统提示词，则需要评审者
-func (this *Rule) NeedReviewer() bool {
-	if this.config == nil {
+func (r *Rule) NeedReviewer() bool {
+	if r.config == nil {
 		return false
 	}
-	return this.ReviewerSystemMessage() != ""
+	return r.ReviewerSystemMessage() != ""
 }
 
 // ReviewerSystemMessage 获取评审者系统提示词
-func (this *Rule) ReviewerSystemMessage() string {
-	if this.config == nil {
+func (r *Rule) ReviewerSystemMessage() string {
+	if r.config == nil {
 		return ""
 	}
-	return this.config.ReviewerSystemMessage
+	return r.config.ReviewerSystemMessage
 }
 
 // ReviewMessage 构建评审提示词
 // 将问题和答案组合，替换模板中的占位符（{question}, {answer}）
-func (this *Rule) ReviewMessage(question string, answer string) string {
-	if this.config == nil {
+func (r *Rule) ReviewMessage(question string, answer string) string {
+	if r.config == nil {
 		return ""
 	}
 	replacer := strings.NewReplacer(
 		"{question}", question,
 		"{answer}", answer,
 	)
-	return replacer.Replace(this.config.ReviewMessage)
+	return replacer.Replace(r.config.ReviewMessage)
 }
 
 // RewriteMessage 构建重写提示词
 // 将评审反馈组合到提示词中，替换模板中的占位符（{review}）
-func (this *Rule) RewriteMessage(review string) string {
-	if this.config == nil {
+func (r *Rule) RewriteMessage(review string) string {
+	if r.config == nil {
 		return ""
 	}
 	replacer := strings.NewReplacer(
 		"{review}", review,
 	)
-	return replacer.Replace(this.config.RewriteMessage)
+	return replacer.Replace(r.config.RewriteMessage)
 }
 
 // ParseReview 解析评审结果
@@ -211,7 +224,7 @@ func (this *Rule) RewriteMessage(review string) string {
 // 期望格式：score: 分数\nreview: 评价
 // 参数 text: LLM 返回的评审文本
 // 返回: ReviewResult
-func (this *Rule) ParseReview(text string) ReviewResult {
+func (r *Rule) ParseReview(text string) ReviewResult {
 	var scoreString, review, isFormatted = parseKeyValueText(text, "score", "review")
 	score, _ := strconv.Atoi(scoreString)
 	if isFormatted {

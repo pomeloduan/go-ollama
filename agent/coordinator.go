@@ -27,18 +27,22 @@ func newCoordinator(ollama ollama.OllamaManager, rule rule.RuleManager) *Coordin
 // addSpecialist 注册专家到协调者的专家列表中
 // 参数 name: 专家名称
 // 参数 introduction: 专家介绍，用于匹配问题
-func (this *Coordinator) addSpecialist(name string, introduction string) {
-	this.specialistMap[name] = introduction
+func (c *Coordinator) addSpecialist(name string, introduction string) {
+	c.specialistMap[name] = introduction
 }
 
 // askForSpecialistName 分析用户问题，选择最合适的专家来回答
 // 使用 LLM 根据专家介绍和问题内容进行匹配
 // 参数 chat: 用户输入的问题
-// 返回: 匹配的专家名称，如果没有匹配则返回空字符串
-func (this *Coordinator) askForSpecialistName(chat string) string {
-	message := this.rule.CoordinatorMessage(chat)
-	for name, introduction := range this.specialistMap {
-		message += this.rule.CoordinatorSpecialistMessage(name, introduction)
+// 返回: 匹配的专家名称、error
+func (c *Coordinator) askForSpecialistName(chat string) (string, error) {
+	message := c.rule.CoordinatorMessage(chat)
+	for name, introduction := range c.specialistMap {
+		message += c.rule.CoordinatorSpecialistMessage(name, introduction)
 	}
-	return this.ollama.ChatWithoutContext(this.modelName, message)
+	result, err := c.ollama.ChatWithoutContext(c.modelName, message)
+	if err != nil {
+		return "", err
+	}
+	return result, nil
 }

@@ -102,28 +102,43 @@ func StartAgentManager(ollama ollama.OllamaManager, logger logger.ErrorLogger) (
 // 流程：1. 协调者选择专家 2. 专家回答问题 3. 评审者评估 4. 低分重写
 // 参数 chat: 用户输入的问题
 // 返回: Agent 生成的回答
-func (this *agentManager) Chat(chat string) string {
+func (a *agentManager) Chat(chat string) string {
 	// 1. 调用协调者选择最适合的专家
-	name := this.coordinator.askForSpecialistName(chat)
-	specialist, ok := this.specialistMap[name]
+	name, err := a.coordinator.askForSpecialistName(chat)
+	if err != nil {
+		a.logger.LogError(err, "coordinator askForSpecialistName")
+		// 如果协调者失败，使用通用专家
+		name = ""
+	}
+	specialist, ok := a.specialistMap[name]
 	// 如果没有匹配的专家，使用通用专家
 	if !ok {
-		specialist = this.generalAgent
+		specialist = a.generalAgent
 	}
 
 	// 2. 调用专家生成回答
-	answer := specialist.chat(chat)
+	answer, err := specialist.chat(chat)
+	if err != nil {
+		a.logger.LogError(err, "specialist chat")
+		return "抱歉，处理问题时出现错误，请稍后重试。"
+	}
 	
 	// 3. 如果有评审者，进行质量评估
-	reviewer, ok := this.reviewerMap[name]
-		if ok {
+	reviewer, ok := a.reviewerMap[name]
+	if ok {
 		review := reviewer.review(chat, answer)
 		// 4. 如果分数低于阈值，触发重写流程
 		if review.Score < rewriteScore {
 			// 获取 specialist 对应的规则并构建重写消息
 			rule := specialist.getRule()
 			message := rule.RewriteMessage(review.Review)
-			answer = specialist.chat(message)
+			rewrittenAnswer, err := specialist.chat(message)
+			if err != nil {
+				a.logger.LogError(err, "specialist rewrite")
+				// 如果重写失败，返回原始答案
+				return answer
+			}
+			answer = rewrittenAnswer
 		}
 	}
 	return answer
